@@ -6,6 +6,7 @@ using CoinGecko;
 using CoinGecko.ApiEndPoints;
 using CoinGecko.Interfaces;
 using CoinGecko.Clients;
+using System.IO;
 
 namespace BombPriceBot
 {
@@ -25,11 +26,10 @@ namespace BombPriceBot
 
             //  You can assign your bot token to a string, and pass that in to connect.
             //  This is, however, insecure, particularly if you plan to have your code hosted in a public repository.
-            var token = "OTIwNDgzNzU1MDU4MTQ3MzU4.YblBTA.2UtjTX6yfKLsXf_uR-wSFfYwG1s";
 
             // Some alternative options would be to keep your token in an Environment Variable or a standalone file.
             // var token = Environment.GetEnvironmentVariable("NameOfYourEnvironmentVariable");
-            // var token = File.ReadAllText("token.txt");
+            var token = File.ReadAllText("token.txt");
             // var token = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json")).Token;
 
             await _client.LoginAsync(TokenType.Bot, token);

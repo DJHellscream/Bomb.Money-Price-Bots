@@ -14,4 +14,10 @@
     <PackageReference Include="Discord.Net.WebSocket" Version="2.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="token.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
