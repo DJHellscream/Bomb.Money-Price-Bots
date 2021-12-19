@@ -6,10 +6,13 @@ using System.Threading.Tasks;
 
 namespace BombPriceBot
 {
-    internal class PancakeSwapToken
+    internal abstract class Token
     {
         public TokenData Data { get; set; }
         public string Updated_At { get; set; }
+    }
+    internal class PancakeSwapToken : Token
+    {
     }
 
     internal class TokenData

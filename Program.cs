@@ -22,14 +22,22 @@ namespace BombPriceBot
         {
             try
             {
-                string discordToken = File.ReadAllText("token.txt");
                 var _config = new DiscordSocketConfig() { MessageCacheSize = 100 };
                 _client = new DiscordSocketClient(_config);
                 _client.Log += Log;
 
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
 
-                await _client.LoginAsync(TokenType.Bot, discordToken);
+                try
+                {
+                    string discordToken = File.ReadAllText("token.txt");
+                    await _client.LoginAsync(TokenType.Bot, discordToken);
+                }
+                catch
+                {
+                    Console.WriteLine("Unable to read discord token from token.txt. " +
+                        "Please ensure file exists and correct access token is there.");
+                }
                 await _client.StartAsync();
 
                 _client.GuildAvailable += _client_GuildAvailable;
@@ -76,7 +84,7 @@ namespace BombPriceBot
                         var user = guild.GetUser(_client.CurrentUser.Id);
                         await user.ModifyAsync(x =>
                         {
-                            newNick = GetPricePCS(client);
+                            newNick = GetPricePCS<PancakeSwapToken>(client);
                             x.Nickname = newNick;
                         });
                     }
@@ -98,7 +106,7 @@ namespace BombPriceBot
             await Task.Run(() => { gotGuild = true; });
         }
 
-        private string GetPricePCS(HttpClient httpClient)
+        private string GetPricePCS<T>(HttpClient httpClient) where T : Token
         {
             string s = null;
             StringBuilder result = new StringBuilder();
@@ -109,7 +117,7 @@ namespace BombPriceBot
             {
                 // Parse the response body.
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
-                PancakeSwapToken pcsToken = JsonConvert.DeserializeObject<PancakeSwapToken>(dataObjects);//💣
+                T pcsToken = JsonConvert.DeserializeObject<T>(dataObjects);//💣
                 result.Append("$" + Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2) + " " + _configClass.TokenImage + " " + pcsToken.Data.Symbol);
                 Console.WriteLine(result.ToString());
             }
