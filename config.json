@@ -1,5 +1,6 @@
 {
-  "DiscordToken": "OTIwNDgzNzU1MDU4MTQ3MzU4.YblBTA.CqQBt25Pw-0hoTIROnb-AehShQQ",
+  "DiscordToken": "token",
   "TokenContract": "0x522348779dcb2911539e76a1042aa922f9c47ee3",
-  "TokenSymbol": "BOMB"
+  "TokenSymbol": "BOMB",
+  "TokenImage": "💣"
 }
