@@ -22,16 +22,16 @@ namespace BombPriceBot
         {
             try
             {
+                string discordToken = File.ReadAllText("token.txt");
                 var _config = new DiscordSocketConfig() { MessageCacheSize = 100 };
                 _client = new DiscordSocketClient(_config);
                 _client.Log += Log;
 
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
 
-                await _client.LoginAsync(TokenType.Bot, _configClass.DiscordToken);
+                await _client.LoginAsync(TokenType.Bot, discordToken);
                 await _client.StartAsync();
 
-                _client.MessageReceived += MessageReceived;
                 _client.GuildAvailable += _client_GuildAvailable;
 
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
@@ -109,8 +109,8 @@ namespace BombPriceBot
             {
                 // Parse the response body.
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
-                PancakeSwapToken bombToken = JsonConvert.DeserializeObject<PancakeSwapToken>(dataObjects);
-                result.Append("$" + Decimal.Round(Decimal.Parse(bombToken.Data.Price), 2) + " 💣 " + bombToken.Data.Symbol);
+                PancakeSwapToken pcsToken = JsonConvert.DeserializeObject<PancakeSwapToken>(dataObjects);//💣
+                result.Append("$" + Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2) + " " + _configClass.TokenImage + " " + pcsToken.Data.Symbol);
                 Console.WriteLine(result.ToString());
             }
             else
@@ -119,18 +119,6 @@ namespace BombPriceBot
             }
 
             return result.ToString();
-        }
-
-        private async Task MessageReceived(SocketMessage arg)
-        {
-            if (arg.Author.IsBot)
-                return;
-
-            if (arg.Content.ToLower() == "ping")
-            {
-                MessageReference message = new(arg.Id, arg.Channel.Id);
-                await arg.Channel.SendMessageAsync("Pong", false, null, null, null, message);
-            }
         }
 
         private Task Log(LogMessage msg)
