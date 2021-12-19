@@ -1,23 +1,18 @@
-﻿using System;
-using System.Threading.Tasks;
-using Discord;
+﻿using Discord;
 using Discord.WebSocket;
-using CoinGecko;
-using CoinGecko.ApiEndPoints;
-using CoinGecko.Interfaces;
-using CoinGecko.Clients;
-using System.IO;
-using BscScanner;
 using Newtonsoft.Json;
-using Nethereum.Web3;
-using System.Numerics;
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace BombPriceBot
 {
     internal class Program
     {
         AConfigurationClass _configClass;
-        BscScanClient _bscClient;
         DiscordSocketClient _client;
         bool gotGuild = false;
 
@@ -33,13 +28,6 @@ namespace BombPriceBot
 
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
 
-                var web3BSC = new Web3("https://bsc-dataseed1.binance.org:443");
-                var contract = web3BSC.Eth.GetContract(_configClass.BombABI, _configClass.BombContract);
-                var function = contract.GetFunction("totalSupply");
-
-                var res = await function.CallAsync<BigInteger>();
-
-                _bscClient = new BscScanClient(_configClass.BscScanAPIKey);
                 await _client.LoginAsync(TokenType.Bot, _configClass.DiscordToken);
                 await _client.StartAsync();
 
@@ -68,36 +56,69 @@ namespace BombPriceBot
                 return;
             }
 
-            Console.WriteLine("Getting Bomb price");
+            Console.WriteLine("Getting price");
 
-            ICoinGeckoClient geckoClient = CoinGeckoClient.Instance;
-            System.Collections.Generic.IReadOnlyCollection<SocketGuild> wut = _client.Guilds;
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract);
 
+            // Add an Accept header for JSON format.
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            System.Collections.Generic.IReadOnlyCollection<SocketGuild> guilds = _client.Guilds;
+
+            string newNick = "";
             while (true)
             {
-                //var newNick = await geckoClient.SimpleClient.GetSimplePrice(new string[] { "bomb-money" }, new string[] { "usd" });
-                double balance = await _bscClient.GetTokenCirculatingSupply(_configClass.BombContract);
-
-                foreach (var guild in wut)
+                try
                 {
-                    var user = guild.GetUser(_client.CurrentUser.Id);
-                    await user.ModifyAsync(x =>
+                    foreach (var guild in guilds)
                     {
-                        double test = BscScanner.Extensions.Convert.BscConvert.GweiToBnb(balance);
-                        //x.Nickname = "$" + newNick["bomb-money"]["usd"]?.ToString() + " 💣 BOMB";
-                        x.Nickname = balance.ToHumanReadable(4);
-                    });
-                }
+                        var user = guild.GetUser(_client.CurrentUser.Id);
+                        await user.ModifyAsync(x =>
+                        {
+                            newNick = GetPricePCS(client);
+                            x.Nickname = newNick;
+                        });
+                    }
 
-                //Console.WriteLine("Bomb price updated to: " + newNick["bomb-money"]["usd"]?.ToString());
-                Console.WriteLine("Total Supply updated");
-                await Task.Delay(15000);
+                    await Task.Delay(15000);
+                }
+                catch (Exception e)
+                {
+                    Console.Write(e.ToString());
+                    break;
+                }
             }
+
+            client.Dispose();
         }
 
         private async Task _client_GuildAvailable(SocketGuild arg)
         {
             await Task.Run(() => { gotGuild = true; });
+        }
+
+        private string GetPricePCS(HttpClient httpClient)
+        {
+            string s = null;
+            StringBuilder result = new StringBuilder();
+            HttpClient client = httpClient;
+
+            HttpResponseMessage response = client.GetAsync(s).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                // Parse the response body.
+                string dataObjects = response.Content.ReadAsStringAsync().Result;
+                PancakeSwapToken bombToken = JsonConvert.DeserializeObject<PancakeSwapToken>(dataObjects);
+                result.Append("$" + Decimal.Round(Decimal.Parse(bombToken.Data.Price), 2) + " 💣 " + bombToken.Data.Symbol);
+                Console.WriteLine(result.ToString());
+            }
+            else
+            {
+                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
+            }
+
+            return result.ToString();
         }
 
         private async Task MessageReceived(SocketMessage arg)
