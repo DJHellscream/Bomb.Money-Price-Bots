@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot
+namespace FNC Token Price
 {
     internal abstract class Token
     {
         public TokenData Data { get; set; }
         public string Updated_At { get; set; }
     }
-    internal class PancakeSwapToken : Token
+    internal class Coingecko : Token
     {
     }
 
