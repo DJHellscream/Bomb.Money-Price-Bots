@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +13,7 @@ namespace BombPriceBot
 {
     internal class Program
     {
+        IReadOnlyCollection<SocketGuild> _guilds;
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
 
@@ -21,39 +23,69 @@ namespace BombPriceBot
         {
             try
             {
-                GatewayIntents gatewayIntents = new GatewayIntents();
-                gatewayIntents = GatewayIntents.Guilds;
-
-                var _config = new DiscordSocketConfig() { MessageCacheSize = 100, GatewayIntents = gatewayIntents };
-                _client = new DiscordSocketClient(_config);
-                _client.Log += Log;
-
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
 
-                try
-                {
-                    string discordToken = File.ReadAllText("token.txt");
-                    await _client.LoginAsync(TokenType.Bot, discordToken);
-                }
-                catch
-                {
-                    WriteToConsole("Unable to read discord token from token.txt. " +
-                        "Please ensure file exists and correct access token is there.");
-                }
-                await _client.StartAsync();
+                await LoginAndConnect();
 
+                _client.JoinedGuild += _client_JoinedGuild;
+                _client.GuildAvailable += _client_GuildAvailable;
+                _client.GuildUpdated += _client_GuildUpdated;
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
-                await Task.Delay(5000);
+                await Task.Delay(3000);
 
-                await AsyncGetPrice();
+                _ = AsyncGetPrice();
 
                 // Block this task until the program is closed.
                 await Task.Delay(-1);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                WriteToConsole(ex.ToString());
             }
+        }
+
+        private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
+        {
+            WriteToConsole("Guild Updated.");
+            await Task.Run(() => { _guilds = _client.Guilds; });
+        }
+
+        private async Task _client_GuildAvailable(SocketGuild arg)
+        {
+            WriteToConsole("Guild Available.");
+            await Task.Run(() => { _guilds = _client.Guilds; });
+        }
+
+        private async Task _client_JoinedGuild(SocketGuild arg)
+        {
+            WriteToConsole("Guild Joined.");
+            await Task.Run(() => { _guilds = _client.Guilds; });
+        }
+
+        private async Task LoginAndConnect()
+        {
+            GatewayIntents gatewayIntents = new GatewayIntents();
+            gatewayIntents = GatewayIntents.Guilds;
+
+            var _config = new DiscordSocketConfig() { MessageCacheSize = 100, GatewayIntents = gatewayIntents };
+            _client = new DiscordSocketClient(_config);
+            _client.Log += Log;
+
+            try
+            {
+                string discordToken = File.ReadAllText("token.txt");
+                await _client.LoginAsync(TokenType.Bot, discordToken);
+            }
+            catch
+            {
+                WriteToConsole("Unable to read discord token from token.txt. " +
+                    "Please ensure file exists and correct access token is there." +
+                    Environment.NewLine + "Exiting in 10seconds.");
+                await Task.Delay(10);
+                Environment.Exit(0);
+            }
+
+            await _client.StartAsync();
         }
 
         private async Task AsyncGetPrice()
@@ -74,18 +106,22 @@ namespace BombPriceBot
             {
                 try
                 {
-                    if (_client.Guilds.Count > 0)
-                        foreach (var guild in _client.Guilds)
-                        {
-                            var user = guild.GetUser(_client.CurrentUser.Id);
-                            await user.ModifyAsync(x =>
+                    if (_client.ConnectionState == ConnectionState.Connected)
+                    {
+                        if (_guilds != null && _guilds.Count > 0)
+                            foreach (var guild in _guilds)
                             {
-                                newNick = GetPricePCS<PancakeSwapToken>(client);
-                                x.Nickname = newNick;
-                            });
-                        }
-                    else
-                        WriteToConsole("Bot is not a part of any guilds.");
+                                var user = guild.GetUser(_client.CurrentUser.Id);
+                                await user.ModifyAsync(x =>
+                                {
+                                    newNick = GetPricePCS<PancakeSwapToken>(client);
+                                    x.Nickname = newNick;
+                                    _client.SetActivityAsync(new Game("TWAP: " + _configClass.TokenSymbol, ActivityType.Watching, ActivityProperties.None, null)).ConfigureAwait(false);
+                                });
+                            }
+                        else
+                            WriteToConsole("Bot is not a part of any guilds.");
+                    }
 
                     await Task.Delay(15000);
                 }
@@ -130,9 +166,7 @@ namespace BombPriceBot
 
         private void WriteToConsole(String message)
         {
-#if DEBUG
             Console.WriteLine(message);
-#endif   
         }
     }
 }
