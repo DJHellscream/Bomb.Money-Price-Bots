@@ -14,7 +14,6 @@ namespace BombPriceBot
     {
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
-        bool gotGuild = false;
 
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -22,7 +21,10 @@ namespace BombPriceBot
         {
             try
             {
-                var _config = new DiscordSocketConfig() { MessageCacheSize = 100 };
+                GatewayIntents gatewayIntents = new GatewayIntents();
+                gatewayIntents = GatewayIntents.Guilds;
+
+                var _config = new DiscordSocketConfig() { MessageCacheSize = 100, GatewayIntents = gatewayIntents };
                 _client = new DiscordSocketClient(_config);
                 _client.Log += Log;
 
@@ -35,12 +37,10 @@ namespace BombPriceBot
                 }
                 catch
                 {
-                    Console.WriteLine("Unable to read discord token from token.txt. " +
+                    WriteToConsole("Unable to read discord token from token.txt. " +
                         "Please ensure file exists and correct access token is there.");
                 }
                 await _client.StartAsync();
-
-                _client.GuildAvailable += _client_GuildAvailable;
 
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
                 await Task.Delay(5000);
@@ -52,58 +52,51 @@ namespace BombPriceBot
             }
             catch (Exception ex)
             {
-                Console.Write(ex.ToString());
+                Console.WriteLine(ex.ToString());
             }
         }
 
         private async Task AsyncGetPrice()
         {
-            if (!gotGuild)
+            WriteToConsole("Getting price");
+
+            HttpClient client = new()
             {
-                Console.WriteLine("Guild available was not received, can't change nickname.");
-                return;
-            }
-
-            Console.WriteLine("Getting price");
-
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract);
+                BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract)
+            };
 
             // Add an Accept header for JSON format.
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
-            System.Collections.Generic.IReadOnlyCollection<SocketGuild> guilds = _client.Guilds;
 
             string newNick = "";
             while (true)
             {
                 try
                 {
-                    foreach (var guild in guilds)
-                    {
-                        var user = guild.GetUser(_client.CurrentUser.Id);
-                        await user.ModifyAsync(x =>
+                    if (_client.Guilds.Count > 0)
+                        foreach (var guild in _client.Guilds)
                         {
-                            newNick = GetPricePCS<PancakeSwapToken>(client);
-                            x.Nickname = newNick;
-                        });
-                    }
+                            var user = guild.GetUser(_client.CurrentUser.Id);
+                            await user.ModifyAsync(x =>
+                            {
+                                newNick = GetPricePCS<PancakeSwapToken>(client);
+                                x.Nickname = newNick;
+                            });
+                        }
+                    else
+                        WriteToConsole("Bot is not a part of any guilds.");
 
                     await Task.Delay(15000);
                 }
                 catch (Exception e)
                 {
-                    Console.Write(e.ToString());
+                    WriteToConsole(e.ToString());
                     break;
                 }
             }
 
             client.Dispose();
-        }
-
-        private async Task _client_GuildAvailable(SocketGuild arg)
-        {
-            await Task.Run(() => { gotGuild = true; });
         }
 
         private string GetPricePCS<T>(HttpClient httpClient) where T : Token
@@ -119,11 +112,11 @@ namespace BombPriceBot
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
                 T pcsToken = JsonConvert.DeserializeObject<T>(dataObjects);//💣
                 result.Append("$" + Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2) + " " + _configClass.TokenImage + " " + pcsToken.Data.Symbol);
-                Console.WriteLine(result.ToString());
+                WriteToConsole(result.ToString());
             }
             else
             {
-                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
+                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
             }
 
             return result.ToString();
@@ -133,6 +126,13 @@ namespace BombPriceBot
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
+        }
+
+        private void WriteToConsole(String message)
+        {
+#if DEBUG
+            Console.WriteLine(message);
+#endif   
         }
     }
 }
