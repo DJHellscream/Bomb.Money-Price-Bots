@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot
+namespace FancyGamesToken
 {
     internal class Program
     {
