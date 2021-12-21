@@ -94,7 +94,8 @@ namespace BombPriceBot
 
             HttpClient client = new()
             {
-                BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract)
+                BaseAddress = new Uri("https://api.coingecko.com/api/v3/simple/price?ids=fancy-games&vs_currencies=usd
+" + _configClass.TokenContract)
             };
 
             // Add an Accept header for JSON format.
@@ -116,7 +117,7 @@ namespace BombPriceBot
                                 {
                                     newNick = GetPricePCS<PancakeSwapToken>(client);
                                     x.Nickname = newNick;
-                                    _client.SetActivityAsync(new Game("TWAP: " + _configClass.TokenSymbol, ActivityType.Watching, ActivityProperties.None, null)).ConfigureAwait(false);
+                                    _client.SetActivityAsync(new Game( _configClass.TokenSymbol, ActivityType.Watching, ActivityProperties.None, null)).ConfigureAwait(false);
                                 });
                             }
                         else
