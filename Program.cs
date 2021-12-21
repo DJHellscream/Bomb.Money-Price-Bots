@@ -41,7 +41,8 @@ namespace BombPriceBot
                 await Task.Delay(3000);
 
                 _ = AsyncGetPrice();
-                _ = AsyncGetTWAP();
+                if (_configClass.TokenSymbol.Equals("BOMB"))
+                    _ = AsyncGetTWAP();
 
                 // Block this task until the program is closed.
                 await Task.Delay(-1);
@@ -161,9 +162,9 @@ namespace BombPriceBot
 
         private async Task AsyncGetTWAP()
         {
+            WriteToConsole("Getting TWAP");
             while (true)
             {
-                WriteToConsole("Getting TWAP");
                 try
                 {
                     var twap = await _moneyOracle.TWAPAsync();
