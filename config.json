@@ -1,5 +1,6 @@
 ﻿{
   "BscScanAPIKey": "BQUZ5BPYTG6K9BK17B1N2GRX46C1MFYF8B",
+  "BscScanRPC": "https://bsc-dataseed1.binance.org:443",
   "TokenContract": "0x522348779dcb2911539e76a1042aa922f9c47ee3",
   "TokenSymbol": "TEST",
   "TokenImage": "",

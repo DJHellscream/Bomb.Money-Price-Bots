@@ -18,7 +18,8 @@ namespace BombPriceBot
         IReadOnlyCollection<SocketGuild> _guilds;
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
-
+        BombMoneyOracle _moneyOracle;
+        BombMoneyTreasury _moneyTreasury;
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
@@ -26,10 +27,10 @@ namespace BombPriceBot
             try
             {
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
+                _moneyOracle = new BombMoneyOracle(_configClass.BscScanRPC, _configClass.OracleContract, _configClass.OracleABI, _configClass.TokenContract);
+                _moneyTreasury = new BombMoneyTreasury(_configClass.BscScanRPC, _configClass.TreasuryContract, _configClass.TreasuryABI);
 
                 await LoginAndConnect();
-
-                await DoBSCStuff();
 
                 _client.JoinedGuild += _client_JoinedGuild;
                 _client.GuildAvailable += _client_GuildAvailable;
@@ -40,6 +41,7 @@ namespace BombPriceBot
                 await Task.Delay(3000);
 
                 _ = AsyncGetPrice();
+                _ = AsyncGetTWAP();
 
                 // Block this task until the program is closed.
                 await Task.Delay(-1);
@@ -48,16 +50,6 @@ namespace BombPriceBot
             {
                 WriteToConsole(ex.ToString());
             }
-        }
-
-        private async Task DoBSCStuff()
-        {
-            // Directly invoke Smart Contract
-            var web3BSC = new Web3("https://bsc-dataseed1.binance.org:443");
-            var contract = web3BSC.Eth.GetContract(_configClass.OracleABI, _configClass.OracleContract);
-            var function = contract.GetFunction("twap");
-
-            var res = await function.CallAsync<BigInteger>();
         }
 
         //private async Task _client_MessageReceived(SocketMessage arg)
@@ -149,7 +141,6 @@ namespace BombPriceBot
                                 {
                                     newNick = GetPricePCS<PancakeSwapToken>(client);
                                     x.Nickname = newNick;
-                                    _client.SetActivityAsync(new Game("TWAP: " + _configClass.TokenSymbol, ActivityType.Watching, ActivityProperties.None, null)).ConfigureAwait(false);
                                 });
                             }
                         else
@@ -166,6 +157,28 @@ namespace BombPriceBot
             }
 
             client.Dispose();
+        }
+
+        private async Task AsyncGetTWAP()
+        {
+            while (true)
+            {
+                WriteToConsole("Getting TWAP");
+                try
+                {
+                    var twap = await _moneyOracle.TWAPAsync();
+
+                    WriteToConsole("TWAP: " + twap);
+                    await _client.SetActivityAsync(new Game("TWAP: " + twap, ActivityType.Watching, ActivityProperties.None, null));
+                }
+                catch (Exception e)
+                {
+                    WriteToConsole(e.ToString());
+                }
+
+                //Pause for 10seconds
+                await Task.Delay(10000);
+            }
         }
 
         private string GetPricePCS<T>(HttpClient httpClient) where T : Token
