@@ -1,11 +1,13 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Nethereum.Web3;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,9 +29,13 @@ namespace BombPriceBot
 
                 await LoginAndConnect();
 
+                await DoBSCStuff();
+
                 _client.JoinedGuild += _client_JoinedGuild;
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
+                //_client.MessageReceived += _client_MessageReceived;
+
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
                 await Task.Delay(3000);
 
@@ -43,6 +49,33 @@ namespace BombPriceBot
                 WriteToConsole(ex.ToString());
             }
         }
+
+        private async Task DoBSCStuff()
+        {
+            // Directly invoke Smart Contract
+            var web3BSC = new Web3("https://bsc-dataseed1.binance.org:443");
+            var contract = web3BSC.Eth.GetContract(_configClass.OracleABI, _configClass.OracleContract);
+            var function = contract.GetFunction("twap");
+
+            var res = await function.CallAsync<BigInteger>();
+        }
+
+        //private async Task _client_MessageReceived(SocketMessage arg)
+        //{
+        //    WriteToConsole("Message Received. " + arg.Content);
+        //    if (arg.Author.IsBot)
+        //        return;
+
+        //    if (arg.Content.StartsWith('?'))
+        //    {
+        //        EmbedBuilder embed = new EmbedBuilder();
+        //        embed.AddField("Symbol", "BOMB", true);
+        //        embed.ImageUrl = "https://app.bomb.money/bomb1.png";
+
+        //        MessageReference message = new(arg.Id, arg.Channel.Id);
+        //        await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed.Build() });
+        //    }
+        //}
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
@@ -65,7 +98,7 @@ namespace BombPriceBot
         private async Task LoginAndConnect()
         {
             GatewayIntents gatewayIntents = new GatewayIntents();
-            gatewayIntents = GatewayIntents.Guilds;
+            gatewayIntents = GatewayIntents.Guilds | GatewayIntents.DirectMessages | GatewayIntents.GuildMessages;
 
             var _config = new DiscordSocketConfig() { MessageCacheSize = 100, GatewayIntents = gatewayIntents };
             _client = new DiscordSocketClient(_config);
