@@ -94,8 +94,7 @@ namespace FancyGamesToken
 
             HttpClient client = new()
             {
-                BaseAddress = new Uri("https://api.coingecko.com/api/v3/simple/price?ids=fancy-games&vs_currencies=usd
-" + _configClass.TokenContract)
+                BaseAddress = new Uri("https://api.coingecko.com/api/v3/simple/price?ids=fancy-games&vs_currencies=usd")
             };
 
             // Add an Accept header for JSON format.
