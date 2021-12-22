@@ -118,20 +118,14 @@ namespace BombPriceBot
         {
             WriteToConsole("Getting price");
 
-            HttpClient client = new()
-            {
-                BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract)
-            };
-
-            // Add an Accept header for JSON format.
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-
             string newNick = "";
             while (true)
             {
                 try
                 {
+                    //Testing Moralis data
+                    string mTest = GetPriceMoralis();
+
                     if (_client.ConnectionState == ConnectionState.Connected)
                     {
                         if (_guilds != null && _guilds.Count > 0)
@@ -140,7 +134,7 @@ namespace BombPriceBot
                                 var user = guild.GetUser(_client.CurrentUser.Id);
                                 await user.ModifyAsync(x =>
                                 {
-                                    newNick = GetPricePCS<PancakeSwapToken>(client);
+                                    newNick = GetPricePCS<PancakeSwapToken>();
                                     x.Nickname = newNick;
                                 });
                             }
@@ -156,8 +150,6 @@ namespace BombPriceBot
                     break;
                 }
             }
-
-            client.Dispose();
         }
 
         private async Task AsyncGetTWAP()
@@ -182,11 +174,19 @@ namespace BombPriceBot
             }
         }
 
-        private string GetPricePCS<T>(HttpClient httpClient) where T : Token
+        private string GetPricePCS<T>() where T : Token
         {
+            HttpClient client = new()
+            {
+                BaseAddress = new Uri("https://api.pancakeswap.info/api/v2/tokens/" + _configClass.TokenContract)
+            };
+
+            // Add an Accept header for JSON format.
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
             string s = null;
             StringBuilder result = new StringBuilder();
-            HttpClient client = httpClient;
 
             HttpResponseMessage response = client.GetAsync(s).Result;
             if (response.IsSuccessStatusCode)
@@ -195,6 +195,39 @@ namespace BombPriceBot
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
                 T pcsToken = JsonConvert.DeserializeObject<T>(dataObjects);//💣
                 result.Append("$" + Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2) + " " + _configClass.TokenImage + " " + pcsToken.Data.Symbol);
+                WriteToConsole(result.ToString());
+            }
+            else
+            {
+                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+            }
+
+            return result.ToString();
+        }
+
+        private string GetPriceMoralis()
+        {
+            HttpClient moralisClient = new()
+            {
+                BaseAddress = new Uri("https://deep-index.moralis.io/api/v2/erc20/0x522348779dcb2911539e76a1042aa922f9c47ee3/price?chain=bsc&providerUrl=https%3A%2F%2Fspeedy-nodes-nyc.moralis.io%2F94c4ef9e66d4f133db78b8c1%2Fbsc%2Fmainnet%2F&exchange=0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73")
+            };
+
+            // Add an Accept header for JSON format.
+            moralisClient.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            moralisClient.DefaultRequestHeaders.Add("X-API-Key", "V6FTmAJl1GtNON7hvomKuMp02xg54wn9VzdZDOOIQB44fskTK4avy96btRNhdOvv");
+
+
+            string s = null;
+            StringBuilder result = new StringBuilder();
+            HttpResponseMessage response = moralisClient.GetAsync(s).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                // Parse the response body.
+
+                string dataObjects = response.Content.ReadAsStringAsync().Result;
+                MoralisToken mToken = JsonConvert.DeserializeObject<MoralisToken>(dataObjects);
+                result.Append("mToken: " + mToken.usdPrice + " - " + mToken.exchangeName);
                 WriteToConsole(result.ToString());
             }
             else
