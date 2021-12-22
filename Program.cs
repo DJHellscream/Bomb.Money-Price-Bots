@@ -5,11 +5,13 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace BombPriceBot
 {
@@ -68,7 +70,7 @@ namespace BombPriceBot
         //        MessageReference message = new(arg.Id, arg.Channel.Id);
         //        await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed.Build() });
         //    }
-        //}
+        //}j
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
@@ -116,39 +118,51 @@ namespace BombPriceBot
 
         private async Task AsyncGetPrice()
         {
-            WriteToConsole("Getting price");
+            WriteToConsole($"Getting price from {_configClass.Provider}");
+
+            int timeToWait = _configClass.TimeToUpdatePrice;
 
             string newNick = "";
             while (true)
             {
                 try
                 {
-                    //Testing Moralis data
-                    string mTest = GetPriceMoralis();
-
                     if (_client.ConnectionState == ConnectionState.Connected)
                     {
                         if (_guilds != null && _guilds.Count > 0)
                             foreach (var guild in _guilds)
                             {
                                 var user = guild.GetUser(_client.CurrentUser.Id);
+                                switch (_configClass.Provider)
+                                {
+                                    case Provider.PCS:
+                                        newNick = GetPricePCS<PancakeSwapToken>();
+                                        break;
+                                    case Provider.Moralis:
+                                        newNick = GetPriceMoralis();
+                                        break;
+                                    case Provider.CMC:
+                                        newNick = GetPriceCMC();
+                                        timeToWait = _configClass.TimeToUpdatePriceCMC;
+                                        break;
+                                    default:
+                                        break;
+                                }
                                 await user.ModifyAsync(x =>
                                 {
-                                    newNick = GetPricePCS<PancakeSwapToken>();
                                     x.Nickname = newNick;
                                 });
                             }
                         else
                             WriteToConsole("Bot is not a part of any guilds.");
                     }
-
-                    await Task.Delay(15000);
                 }
                 catch (Exception e)
                 {
                     WriteToConsole(e.ToString());
-                    break;
                 }
+
+                await Task.Delay(timeToWait);
             }
         }
 
@@ -161,8 +175,11 @@ namespace BombPriceBot
                 {
                     var twap = await _moneyOracle.TWAPAsync();
 
-                    WriteToConsole("TWAP: " + twap);
-                    await _client.SetActivityAsync(new Game("TWAP: " + twap, ActivityType.Watching, ActivityProperties.None, null));
+                    string twapString = twap.ToString().PadLeft(18, '0');
+                    Decimal twapD = Decimal.Round(Decimal.Parse(twapString.Insert(4, ".")), 4);
+
+                    WriteToConsole("TWAP: " + twapD);
+                    await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, null));
                 }
                 catch (Exception e)
                 {
@@ -194,13 +211,18 @@ namespace BombPriceBot
                 // Parse the response body.
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
                 T pcsToken = JsonConvert.DeserializeObject<T>(dataObjects);//💣
-                result.Append("$" + Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2) + " " + _configClass.TokenImage + " " + pcsToken.Data.Symbol);
+
+                string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
+
+                result.Append($"${Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2)}{image}{pcsToken.Data.Symbol}");
                 WriteToConsole(result.ToString());
             }
             else
             {
                 WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
             }
+
+            client.Dispose();
 
             return result.ToString();
         }
@@ -215,8 +237,7 @@ namespace BombPriceBot
             // Add an Accept header for JSON format.
             moralisClient.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
-            moralisClient.DefaultRequestHeaders.Add("X-API-Key", "V6FTmAJl1GtNON7hvomKuMp02xg54wn9VzdZDOOIQB44fskTK4avy96btRNhdOvv");
-
+            moralisClient.DefaultRequestHeaders.Add("X-API-Key", _configClass.MoralisAPIKey);
 
             string s = null;
             StringBuilder result = new StringBuilder();
@@ -227,13 +248,71 @@ namespace BombPriceBot
 
                 string dataObjects = response.Content.ReadAsStringAsync().Result;
                 MoralisToken mToken = JsonConvert.DeserializeObject<MoralisToken>(dataObjects);
-                result.Append("mToken: " + mToken.usdPrice + " - " + mToken.exchangeName);
+
+                Decimal priceAsDouble;
+                if (Decimal.TryParse(mToken.usdPrice, out priceAsDouble))
+                {
+                    string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
+
+                    result.Append($"${Decimal.Round(priceAsDouble, 2)}{image}{_configClass.TokenSymbol}");
+                    WriteToConsole(result.ToString());
+                }
+                else
+                {
+                    result.Append("Unable to parse token price.");
+                }
+            }
+            else
+            {
+                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+            }
+
+            moralisClient.Dispose();
+
+            return result.ToString();
+        }
+
+        private string GetPriceCMC()
+        {
+            var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest");
+            //var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map");
+            var queryString = HttpUtility.ParseQueryString(string.Empty);
+            queryString.Add("id", _configClass.CMCTokenID);
+            queryString.Add("convert", "usd");
+            URL.Query = queryString.ToString();
+
+            HttpClient cmcClient = new()
+            {
+                BaseAddress = new Uri(URL.ToString())
+            };
+
+            // Add an Accept header for JSON format.
+            cmcClient.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            cmcClient.DefaultRequestHeaders.Add("X-CMC_PRO_API_KEY", _configClass.CMCAPIKey);
+
+            string s = null;
+            StringBuilder result = new StringBuilder();
+            HttpResponseMessage response = cmcClient.GetAsync(s).Result;
+            if (response.IsSuccessStatusCode)
+            {
+                // Parse the response body.
+
+                string dataObjects = response.Content.ReadAsStringAsync().Result;
+                CMCQuotesLatest mToken = JsonConvert.DeserializeObject<CMCQuotesLatest>(dataObjects);
+
+                Decimal price = (Decimal)mToken.Data._15876.Quote.USD.Price;
+                string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
+
+                result.Append($"${Decimal.Round(price, 2)}{image}{_configClass.TokenSymbol}");
                 WriteToConsole(result.ToString());
             }
             else
             {
                 WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
             }
+
+            cmcClient.Dispose();
 
             return result.ToString();
         }
