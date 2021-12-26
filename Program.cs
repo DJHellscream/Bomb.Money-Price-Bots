@@ -172,6 +172,8 @@ namespace BombPriceBot
                             }
                         else
                             WriteToConsole("Bot is not a part of any guilds.");
+
+                        WriteToConsole(newNick);
                     }
                 }
                 catch (Exception e)
@@ -325,7 +327,6 @@ namespace BombPriceBot
                 string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
 
                 result.Append($"${Decimal.Round(Decimal.Parse(pcsToken.Data.Price), 2)}{image}{pcsToken.Data.Symbol}");
-                WriteToConsole(result.ToString());
             }
             else
             {
@@ -365,7 +366,6 @@ namespace BombPriceBot
                     string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
 
                     result.Append($"${Decimal.Round(priceAsDouble, 2)}{image}{_configClass.TokenSymbol}");
-                    WriteToConsole(result.ToString());
                 }
                 else
                 {
@@ -390,7 +390,6 @@ namespace BombPriceBot
             string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
 
             result.Append($"${Decimal.Round(price, 2)}{image}{_configClass.TokenSymbol}");
-            WriteToConsole(result.ToString());
 
             return result.ToString();
         }
