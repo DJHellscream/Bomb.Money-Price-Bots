@@ -41,7 +41,6 @@ namespace BombPriceBot
                 _client.JoinedGuild += _client_JoinedGuild;
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
-                _client.MessageReceived += _client_MessageReceived;
 
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
                 await Task.Delay(3000);
@@ -49,6 +48,7 @@ namespace BombPriceBot
                 _ = AsyncGetPrice();
                 if (_configClass.TokenSymbol.Equals("BOMB"))
                 {
+                    _client.MessageReceived += _client_MessageReceived;
                     _ = AsyncGetTWAP();
                     _ = AsyncGetLastEpochTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
@@ -61,6 +61,8 @@ namespace BombPriceBot
             {
                 WriteToConsole(ex.ToString());
             }
+
+            _client.Dispose();
         }
 
         private async Task _client_MessageReceived(SocketMessage arg)
