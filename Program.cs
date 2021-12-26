@@ -13,6 +13,8 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using BombPriceBot.SmartContracts;
+
 
 namespace BombPriceBot
 {

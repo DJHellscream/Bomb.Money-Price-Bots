@@ -7,7 +7,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot
+namespace BombPriceBot.SmartContracts
 {
     internal class BombMoneyOracle : SmartContract
     {
