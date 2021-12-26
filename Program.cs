@@ -75,11 +75,11 @@ namespace BombPriceBot
                 if (arg.Content.Contains("mcap"))
                 {
                     embed.AddField("Symbol", "BOMB", true);
-                    embed.AddField($"MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
+                    embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
                 }
                 else
                 {
-                    embed.AddField("Huh?", "wut dat mean?", false);
+                    embed.AddField("Huh?", "wut dat mean? BUIDL'ING...", false);
                 }
 
                 MessageReference message = new(arg.Id, arg.Channel.Id);
@@ -89,19 +89,19 @@ namespace BombPriceBot
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
-            WriteToConsole("Guild Updated.");
+            WriteToConsole($"Guild Updated: {arg1.Name} : {arg2.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
         private async Task _client_GuildAvailable(SocketGuild arg)
         {
-            WriteToConsole("Guild Available.");
+            WriteToConsole($"Guild Available: {arg.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
         private async Task _client_JoinedGuild(SocketGuild arg)
         {
-            WriteToConsole("Guild Joined.");
+            WriteToConsole($"Guild Joined: {arg.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
@@ -143,24 +143,25 @@ namespace BombPriceBot
                     if (_client.ConnectionState == ConnectionState.Connected)
                     {
                         string newNick = String.Empty;
+                        switch (_configClass.Provider)
+                        {
+                            case Provider.PCS:
+                                newNick = GetPricePCS<PancakeSwapToken>();
+                                break;
+                            case Provider.Moralis:
+                                newNick = GetPriceMoralis();
+                                break;
+                            case Provider.CMC:
+                                newNick = GetBombPriceCMC();
+                                break;
+                            default:
+                                break;
+                        }
+
                         if (_guilds != null && _guilds.Count > 0)
                             foreach (var guild in _guilds)
                             {
                                 var user = guild.GetUser(_client.CurrentUser.Id);
-                                switch (_configClass.Provider)
-                                {
-                                    case Provider.PCS:
-                                        newNick = GetPricePCS<PancakeSwapToken>();
-                                        break;
-                                    case Provider.Moralis:
-                                        newNick = GetPriceMoralis();
-                                        break;
-                                    case Provider.CMC:
-                                        newNick = GetBombPriceCMC();
-                                        break;
-                                    default:
-                                        break;
-                                }
 
                                 await user.ModifyAsync(x =>
                                 {
@@ -223,18 +224,22 @@ namespace BombPriceBot
                         if (_guilds != null && _guilds.Count > 0)
                             foreach (var guild in _guilds)
                             {
-                                SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == "BoardroomPrint");
-                                await print.ModifyAsync(x =>
+                                SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == "BombPriceBot");
+                                if (print != null)
                                 {
-                                    if (consultD > (Decimal)1.01)
+                                    await print.ModifyAsync(x =>
                                     {
-                                        x.Color = Color.Green;
-                                    }
-                                    else
-                                        x.Color = Color.Red;
-                                    WriteToConsole($"CONSULT: {consultD}");
-                                });
+                                        if (consultD > (Decimal)1.01)
+                                        {
+                                            x.Color = Color.Green;
+                                        }
+                                        else
+                                            x.Color = Color.Red;
+                                    });
+                                }
                             }
+
+                        WriteToConsole($"CONSULT: {consultD}");
                     }
                 }
                 catch (Exception e)
