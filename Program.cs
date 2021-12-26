@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -22,6 +23,7 @@ namespace BombPriceBot
         DiscordSocketClient _client;
         BombMoneyOracle _moneyOracle;
         BombMoneyTreasury _moneyTreasury;
+        CMCBomb _cmcBomb;
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
@@ -37,14 +39,18 @@ namespace BombPriceBot
                 _client.JoinedGuild += _client_JoinedGuild;
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
-                //_client.MessageReceived += _client_MessageReceived;
+                _client.MessageReceived += _client_MessageReceived;
 
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
                 await Task.Delay(3000);
 
                 _ = AsyncGetPrice();
                 if (_configClass.TokenSymbol.Equals("BOMB"))
+                {
                     _ = AsyncGetTWAP();
+                    _ = AsyncGetLastEpochTWAP();
+                    _ = AsyncPollCMCData<CMCBomb>();
+                }
 
                 // Block this task until the program is closed.
                 await Task.Delay(-1);
@@ -55,22 +61,29 @@ namespace BombPriceBot
             }
         }
 
-        //private async Task _client_MessageReceived(SocketMessage arg)
-        //{
-        //    WriteToConsole("Message Received. " + arg.Content);
-        //    if (arg.Author.IsBot)
-        //        return;
+        private async Task _client_MessageReceived(SocketMessage arg)
+        {
+            WriteToConsole("Message Received. " + arg.Content);
+            if (arg.Author.IsBot)
+                return;
 
-        //    if (arg.Content.StartsWith('?'))
-        //    {
-        //        EmbedBuilder embed = new EmbedBuilder();
-        //        embed.AddField("Symbol", "BOMB", true);
-        //        embed.ImageUrl = "https://app.bomb.money/bomb1.png";
+            if (arg.Content.StartsWith('?'))
+            {
+                EmbedBuilder embed = new EmbedBuilder();
+                if (arg.Content.Contains("mcap"))
+                {
+                    embed.AddField("Symbol", "BOMB", true);
+                    embed.AddField($"MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
+                }
+                else
+                {
+                    embed.AddField("Huh?", "wut dat mean?", false);
+                }
 
-        //        MessageReference message = new(arg.Id, arg.Channel.Id);
-        //        await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed.Build() });
-        //    }
-        //}j
+                MessageReference message = new(arg.Id, arg.Channel.Id);
+                await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed.Build() });
+            }
+        }
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
@@ -121,14 +134,13 @@ namespace BombPriceBot
             WriteToConsole($"Getting price from {_configClass.Provider}");
 
             int timeToWait = _configClass.TimeToUpdatePrice;
-
-            string newNick = "";
             while (true)
             {
                 try
                 {
                     if (_client.ConnectionState == ConnectionState.Connected)
                     {
+                        string newNick = String.Empty;
                         if (_guilds != null && _guilds.Count > 0)
                             foreach (var guild in _guilds)
                             {
@@ -142,12 +154,12 @@ namespace BombPriceBot
                                         newNick = GetPriceMoralis();
                                         break;
                                     case Provider.CMC:
-                                        newNick = GetPriceCMC();
-                                        timeToWait = _configClass.TimeToUpdatePriceCMC;
+                                        newNick = GetBombPriceCMC();
                                         break;
                                     default:
                                         break;
                                 }
+
                                 await user.ModifyAsync(x =>
                                 {
                                     x.Nickname = newNick;
@@ -178,8 +190,8 @@ namespace BombPriceBot
                     string twapString = twap.ToString().PadLeft(18, '0');
                     Decimal twapD = Decimal.Round(Decimal.Parse(twapString.Insert(4, ".")), 4);
 
-                    WriteToConsole("TWAP: " + twapD);
-                    await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, null));
+                    WriteToConsole($"TWAP: {twapD}");
+                    await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, "Printed: "));
                 }
                 catch (Exception e)
                 {
@@ -189,6 +201,95 @@ namespace BombPriceBot
                 //Pause for 10seconds
                 await Task.Delay(10000);
             }
+        }
+
+        private async Task AsyncGetLastEpochTWAP()
+        {
+            WriteToConsole("Getting Consult");
+            while (true)
+            {
+                try
+                {
+                    var consult = await _moneyOracle.ConsultAsync();
+
+                    string consultString = consult.ToString().PadLeft(18, '0');
+                    Decimal consultD = Decimal.Round(Decimal.Parse(consultString.Insert(4, ".")), 4);
+
+                    if (_client.ConnectionState == ConnectionState.Connected)
+                    {
+                        string newNick = String.Empty;
+                        if (_guilds != null && _guilds.Count > 0)
+                            foreach (var guild in _guilds)
+                            {
+                                SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == "BoardroomPrint");
+                                await print.ModifyAsync(x =>
+                                {
+                                    if (consultD > (Decimal)1.01)
+                                    {
+                                        x.Color = Color.Green;
+                                    }
+                                    else
+                                        x.Color = Color.Red;
+                                    WriteToConsole($"CONSULT: {consultD}");
+                                });
+                            }
+                    }
+                }
+                catch (Exception e)
+                {
+                    WriteToConsole(e.ToString());
+                }
+
+                //Pause for 10seconds
+                await Task.Delay(10000);
+            }
+        }
+
+        private async Task AsyncPollCMCData<T>() where T : CMCBomb
+        {
+            var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest");
+            //var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map");
+            var queryString = HttpUtility.ParseQueryString(string.Empty);
+            queryString.Add("id", _configClass.CMCTokenID);
+            queryString.Add("convert", "usd");
+            URL.Query = queryString.ToString();
+
+            HttpClient cmcClient = new()
+            {
+                BaseAddress = new Uri(URL.ToString())
+            };
+
+            try
+            {
+                // Add an Accept header for JSON format.
+                cmcClient.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+                cmcClient.DefaultRequestHeaders.Add("X-CMC_PRO_API_KEY", _configClass.CMCAPIKey);
+
+                string s = null;
+                HttpResponseMessage response = cmcClient.GetAsync(s).Result;
+                if (response.IsSuccessStatusCode)
+                {
+                    // Parse the response body.
+
+                    string dataObjects = response.Content.ReadAsStringAsync().Result;
+                    _cmcBomb = JsonConvert.DeserializeObject<T>(dataObjects);
+                }
+                else
+                {
+                    WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole(ex.ToString());
+            }
+            finally
+            {
+                cmcClient.Dispose();
+            }
+
+            await Task.Delay(_configClass.TimeToUpdatePriceCMC);
         }
 
         private string GetPricePCS<T>() where T : Token
@@ -272,47 +373,15 @@ namespace BombPriceBot
             return result.ToString();
         }
 
-        private string GetPriceCMC()
+        private string GetBombPriceCMC()
         {
-            var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest");
-            //var URL = new UriBuilder("https://pro-api.coinmarketcap.com/v1/cryptocurrency/map");
-            var queryString = HttpUtility.ParseQueryString(string.Empty);
-            queryString.Add("id", _configClass.CMCTokenID);
-            queryString.Add("convert", "usd");
-            URL.Query = queryString.ToString();
-
-            HttpClient cmcClient = new()
-            {
-                BaseAddress = new Uri(URL.ToString())
-            };
-
-            // Add an Accept header for JSON format.
-            cmcClient.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            cmcClient.DefaultRequestHeaders.Add("X-CMC_PRO_API_KEY", _configClass.CMCAPIKey);
-
-            string s = null;
             StringBuilder result = new StringBuilder();
-            HttpResponseMessage response = cmcClient.GetAsync(s).Result;
-            if (response.IsSuccessStatusCode)
-            {
-                // Parse the response body.
 
-                string dataObjects = response.Content.ReadAsStringAsync().Result;
-                CMCQuotesLatest mToken = JsonConvert.DeserializeObject<CMCQuotesLatest>(dataObjects);
+            Decimal price = (Decimal)_cmcBomb.Data.BombInfo.Quote.USD.Price;
+            string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
 
-                Decimal price = (Decimal)mToken.Data._15876.Quote.USD.Price;
-                string image = _configClass.TokenImage.Length > 0 ? $" {_configClass.TokenImage} " : " ";
-
-                result.Append($"${Decimal.Round(price, 2)}{image}{_configClass.TokenSymbol}");
-                WriteToConsole(result.ToString());
-            }
-            else
-            {
-                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
-            }
-
-            cmcClient.Dispose();
+            result.Append($"${Decimal.Round(price, 2)}{image}{_configClass.TokenSymbol}");
+            WriteToConsole(result.ToString());
 
             return result.ToString();
         }

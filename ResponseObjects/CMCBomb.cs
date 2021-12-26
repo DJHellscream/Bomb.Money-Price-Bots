@@ -94,7 +94,7 @@ namespace BombPriceBot
         public USD USD;
     }
 
-    public class _15876
+    public class TokenInfo
     {
         [JsonProperty("id")]
         public int Id;
@@ -148,10 +148,10 @@ namespace BombPriceBot
     public class Data
     {
         [JsonProperty("15876")]
-        public _15876 _15876;
+        public TokenInfo BombInfo;
     }
 
-    public class CMCQuotesLatest
+    public class CMCBomb
     {
         [JsonProperty("status")]
         public Status Status;
