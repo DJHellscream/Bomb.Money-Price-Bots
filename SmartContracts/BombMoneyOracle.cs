@@ -70,6 +70,21 @@ namespace BombPriceBot.SmartContracts
                 throw;
             }
         }
+
+        public async Task<BigInteger> PreviousEpochBombPriceAsync()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("previousEpochBombPrice");
+
+                return await function.CallAsync<BigInteger>();
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 
     internal abstract class SmartContract

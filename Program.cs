@@ -266,12 +266,13 @@ namespace BombPriceBot
 
         private async Task<object> AsyncGetLastEpochTWAP()
         {
-            WriteToConsole("Getting Consult");
+            WriteToConsole("Getting Previous Epoch Bomb Price");
             while (true)
             {
                 try
                 {
-                    var consult = await _moneyOracle.ConsultAsync();
+                    //var consult = await _moneyOracle.ConsultAsync();
+                    var consult = await _moneyTreasury.PreviousEpochBombPriceAsync();
 
                     string consultString = consult.ToString().PadLeft(18, '0');
                     Decimal consultD = Decimal.Round(Decimal.Parse(consultString.Insert(4, ".")), 4);
@@ -309,7 +310,7 @@ namespace BombPriceBot
                                 }
                             }
 
-                            WriteToConsole($"CONSULT: {consultD}");
+                            WriteToConsole($"PrevBombPrice: {consultD}");
                         }
                     }
 
