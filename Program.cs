@@ -20,6 +20,8 @@ namespace BombPriceBot
 {
     internal class Program
     {
+        private static string red = "BoardroomPrinterRed";
+        private static string green = "BoardroomPrinterGreen";
         IReadOnlyCollection<SocketGuild> _guilds;
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
@@ -49,8 +51,9 @@ namespace BombPriceBot
                 if (_configClass.TokenSymbol.Equals("BOMB"))
                 {
                     _client.MessageReceived += _client_MessageReceived;
-                    _ = AsyncGetTWAP();
+                    _ = AsyncVerifyRoles();
                     _ = AsyncGetLastEpochTWAP();
+                    _ = AsyncGetTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
                 }
 
@@ -65,9 +68,60 @@ namespace BombPriceBot
             _client.Dispose();
         }
 
+        private async Task AsyncVerifyRoles()
+        {
+            List<string> s = new List<string>() { red, green };
+
+            try
+            {
+                if (_guilds != null && _guilds.Count > 0)
+                {
+                    foreach (var guild in _guilds)
+                    {
+                        IEnumerable<SocketRole> roles = guild.Roles.Where(x => x.Name == green || x.Name == red);
+
+                        if (roles.Count() != 2)
+                        {
+                            foreach (SocketRole role in roles)
+                            {
+                                await role.DeleteAsync();
+                            }
+                        }
+
+                        foreach (string r in s)
+                        {
+                            SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == r);
+                            if (print == null)
+                            {
+                                Color c;
+                                string name;
+                                if (r == red)
+                                {
+                                    c = Color.Red;
+                                    name = red;
+                                }
+                                else
+                                {
+                                    name = green;
+                                    c = Color.Green;
+                                }
+
+                                await guild.CreateRoleAsync(name, null, c, false, null);
+                                print = guild.Roles.SingleOrDefault(x => x.Name == name);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                WriteToConsole(e.ToString());
+            }
+        }
+
         private async Task _client_MessageReceived(SocketMessage arg)
         {
-            WriteToConsole("Message Received. " + arg.Content);
+            WriteToConsole($"Message Received: {arg.Channel} | {arg.Author} | {arg.Content}");
             if (arg.Author.IsBot)
                 return;
 
@@ -210,7 +264,7 @@ namespace BombPriceBot
             }
         }
 
-        private async Task AsyncGetLastEpochTWAP()
+        private async Task<object> AsyncGetLastEpochTWAP()
         {
             WriteToConsole("Getting Consult");
             while (true)
@@ -226,33 +280,46 @@ namespace BombPriceBot
                     {
                         string newNick = String.Empty;
                         if (_guilds != null && _guilds.Count > 0)
+                        {
                             foreach (var guild in _guilds)
                             {
-                                SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == "BombPriceBot");
-                                if (print != null)
+                                ulong redU;
+                                ulong greenU;
+                                try
                                 {
-                                    await print.ModifyAsync(x =>
-                                    {
-                                        if (consultD > (Decimal)1.01)
-                                        {
-                                            x.Color = Color.Green;
-                                        }
-                                        else
-                                            x.Color = Color.Red;
-                                    });
+                                    redU = guild.Roles.SingleOrDefault(x => x.Name == red).Id;
+                                    greenU = guild.Roles.SingleOrDefault(x => x.Name == green).Id;
+                                }
+                                catch
+                                {
+                                    await AsyncVerifyRoles();
+                                    redU = guild.Roles.SingleOrDefault(x => x.Name == red).Id;
+                                    greenU = guild.Roles.SingleOrDefault(x => x.Name == green).Id;
+                                }
+
+                                if (consultD > (Decimal)1.01)
+                                {
+                                    await guild.CurrentUser.RemoveRoleAsync(redU);
+                                    await guild.CurrentUser.AddRoleAsync(greenU);
+                                }
+                                else if (consultD < (Decimal)1.01)
+                                {
+                                    await guild.CurrentUser.RemoveRoleAsync(greenU);
+                                    await guild.CurrentUser.AddRoleAsync(redU);
                                 }
                             }
 
-                        WriteToConsole($"CONSULT: {consultD}");
+                            WriteToConsole($"CONSULT: {consultD}");
+                        }
                     }
+
+                    //Pause for 10seconds
+                    await Task.Delay(10000);
                 }
                 catch (Exception e)
                 {
                     WriteToConsole(e.ToString());
                 }
-
-                //Pause for 10seconds
-                await Task.Delay(10000);
             }
         }
 
@@ -400,7 +467,7 @@ namespace BombPriceBot
             return Task.CompletedTask;
         }
 
-        private void WriteToConsole(String message)
+        public void WriteToConsole(String message)
         {
             Console.WriteLine(message);
         }
