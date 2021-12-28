@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using BombPriceBot.SmartContracts;
-
+using System.Timers;
 
 namespace BombPriceBot
 {
@@ -56,6 +56,10 @@ namespace BombPriceBot
                     _ = AsyncGetTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
                 }
+                else if (_configClass.TokenSymbol.Equals("BSHARE"))
+                {
+                    _ = StartEpochTimer();
+                }
 
                 // Block this task until the program is closed.
                 await Task.Delay(-1);
@@ -65,7 +69,31 @@ namespace BombPriceBot
                 WriteToConsole(ex.ToString());
             }
 
+            t.Stop();
             _client.Dispose();
+        }
+
+        Timer t = null;
+        private async Task StartEpochTimer()
+        {
+            t = new Timer(30500);
+            t.Elapsed += new ElapsedEventHandler(UpdateEpochTime);
+            t.Start();
+            await Task.CompletedTask;
+        }
+
+        private void UpdateEpochTime(object sender, ElapsedEventArgs e)
+        {
+            int nextEpochHour;
+            int currentHour = DateTime.Now.TimeOfDay.Hours;
+            nextEpochHour = currentHour + (6 - currentHour % 6);
+
+            TimeSpan timeRemaining = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, nextEpochHour, 0, 0).Subtract(DateTime.Now);
+            string format = @"hh\:mm\:ss";
+            string displayString = timeRemaining.ToString(format);
+
+            WriteToConsole($"Epoch timer: {displayString}");
+            _client.SetActivityAsync(new Game($"EPOCH: {displayString}", ActivityType.Watching, ActivityProperties.None, string.Empty));
         }
 
         private async Task AsyncVerifyRoles()
@@ -132,6 +160,15 @@ namespace BombPriceBot
                 {
                     embed.AddField("Symbol", "BOMB", true);
                     embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
+                }
+                else if (arg.Content.Contains("rpc"))
+                {
+                    embed.Title = "bomb.money custom RPC";
+                    embed.AddField("Network Name:", "BSC Mainnet (BOMB RPC)", false);
+                    embed.AddField("RPC URL:", "https://bsc1.bomb.money", false);
+                    embed.AddField("Chain ID:", "56", false);
+                    embed.AddField("Currency Symbol:", "BNB", false);
+                    embed.AddField("Block Explorer:", "https://bscscan.com", false);
                 }
                 else
                 {
