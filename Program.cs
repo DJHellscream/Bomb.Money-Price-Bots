@@ -106,7 +106,7 @@ namespace BombPriceBot
             }
             catch (Exception ex)
             {
-                WriteToConsole($"Error updating epoch time: {ex.ToString()}");
+                WriteToConsole($"Error updating epoch time: {ex}");
             }
         }
 
