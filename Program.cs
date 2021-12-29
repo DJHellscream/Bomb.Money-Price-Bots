@@ -84,16 +84,30 @@ namespace BombPriceBot
 
         private void UpdateEpochTime(object sender, ElapsedEventArgs e)
         {
-            int nextEpochHour;
-            int currentHour = DateTime.Now.TimeOfDay.Hours;
-            nextEpochHour = currentHour + (6 - currentHour % 6);
+            try
+            {
+                DateTime day = DateTime.Today;
+                int nextEpochHour;
+                int currentHour = DateTime.Now.TimeOfDay.Hours;
+                if (currentHour >= 18)
+                {
+                    nextEpochHour = 0;
+                    day = DateTime.Today + new TimeSpan(1, 0, 0, 0);
+                }
+                else
+                    nextEpochHour = currentHour + (6 - currentHour % 6);
 
-            TimeSpan timeRemaining = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.Today.Day, nextEpochHour, 0, 0).Subtract(DateTime.Now);
-            string format = @"hh\:mm\:ss";
-            string displayString = timeRemaining.ToString(format);
+                TimeSpan timeRemaining = new DateTime(day.Year, day.Month, day.Day, nextEpochHour, 0, 0).Subtract(DateTime.Now);
+                string format = @"hh\:mm\:ss";
+                string displayString = timeRemaining.ToString(format);
 
-            WriteToConsole($"Epoch timer: {displayString}");
-            _client.SetActivityAsync(new Game($"EPOCH: {displayString}", ActivityType.Watching, ActivityProperties.None, string.Empty));
+                WriteToConsole($"Epoch timer: {displayString}");
+                _client.SetActivityAsync(new Game($"EPOCH: {displayString}", ActivityType.Watching, ActivityProperties.None, string.Empty));
+            }
+            catch (Exception ex)
+            {
+                WriteToConsole($"Error updating epoch time: {ex.ToString()}");
+            }
         }
 
         private async Task AsyncVerifyRoles()
