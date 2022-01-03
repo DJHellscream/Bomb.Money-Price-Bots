@@ -28,6 +28,7 @@ namespace BombPriceBot
         BombMoneyOracle _moneyOracle;
         BombMoneyTreasury _moneyTreasury;
         CMCBomb _cmcBomb;
+        MessageHandler _handler;
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
@@ -55,6 +56,7 @@ namespace BombPriceBot
                     _ = AsyncGetLastEpochTWAP();
                     _ = AsyncGetTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
+                    _handler = new MessageHandler(_cmcBomb);
                 }
                 else if (_configClass.TokenSymbol.Equals("BSHARE"))
                 {
@@ -167,30 +169,12 @@ namespace BombPriceBot
             if (arg.Author.IsBot)
                 return;
 
-            if (arg.Content.StartsWith('?'))
-            {
-                EmbedBuilder embed = new EmbedBuilder();
-                if (arg.Content.Contains("mcap"))
-                {
-                    embed.AddField("Symbol", "BOMB", true);
-                    embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
-                }
-                else if (arg.Content.Contains("rpc"))
-                {
-                    embed.Title = "bomb.money custom RPC";
-                    embed.AddField("Network Name:", "BSC Mainnet (BOMB RPC)", false);
-                    embed.AddField("RPC URL:", "https://bsc1.bomb.money", false);
-                    embed.AddField("Chain ID:", "56", false);
-                    embed.AddField("Currency Symbol:", "BNB", false);
-                    embed.AddField("Block Explorer:", "https://bscscan.com", false);
-                }
-                else
-                {
-                    embed.AddField("Huh?", "wut dat mean? BUIDL'ING...", false);
-                }
+            Embed embed = _handler.ProcessMessage(arg.Content);
 
+            if (embed != null)
+            {
                 MessageReference message = new(arg.Id, arg.Channel.Id);
-                await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed.Build() });
+                await arg.Channel.SendMessageAsync(null, false, null, null, null, message, null, null, new Embed[] { embed });
             }
         }
 

@@ -17,6 +17,8 @@
         public string CMCAPIKey { get; set; }
         public string MoralisAPIKey { get; set; }
         public string CMCTokenID { get; set; }
+        public string BOMBBTCLP { get; set; }
+        public string BSHAREBNBLP { get; set; }
     }
 
     internal enum Provider

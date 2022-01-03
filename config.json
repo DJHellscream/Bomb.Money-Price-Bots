@@ -4,6 +4,8 @@
   "MoralisAPIKey": "V6FTmAJl1GtNON7hvomKuMp02xg54wn9VzdZDOOIQB44fskTK4avy96btRNhdOvv",
   "BscScanAPIKey": "BQUZ5BPYTG6K9BK17B1N2GRX46C1MFYF8B",
   "BscScanRPC": "https://bsc-dataseed1.binance.org:443",
+  "BOMBBTCLP": "0x84392649eb0bC1c1532F2180E58Bae4E1dAbd8D6",
+  "BSHAREBNBLP": "0x1303246855b5B5EbC71F049Fdb607494e97218f8",
   "TokenContract": "0x522348779dcb2911539e76a1042aa922f9c47ee3",
   "TokenSymbol": "BOMB",
   "TokenImage": "",
