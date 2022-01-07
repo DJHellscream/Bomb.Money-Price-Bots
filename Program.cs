@@ -20,8 +20,9 @@ namespace BombPriceBot
 {
     internal class Program
     {
-        private static string red = "BoardroomPrinterRed";
-        private static string green = "BoardroomPrinterGreen";
+        private static readonly string red = "BoardroomPrinterRed";
+        private static readonly string green = "BoardroomPrinterGreen";
+        private static readonly string zen = "BoardroomPrinterZen";
         IReadOnlyCollection<SocketGuild> _guilds;
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
@@ -52,7 +53,7 @@ namespace BombPriceBot
                 if (_configClass.TokenSymbol.Equals("BOMB"))
                 {
                     _client.MessageReceived += _client_MessageReceived;
-                    _ = AsyncVerifyRoles();
+                    await AsyncVerifyRoles();
                     _ = AsyncGetLastEpochTWAP();
                     _ = AsyncGetTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
@@ -114,7 +115,7 @@ namespace BombPriceBot
 
         private async Task AsyncVerifyRoles()
         {
-            List<string> s = new List<string>() { red, green };
+            List<string> s = new List<string>() { red, green, zen };
 
             try
             {
@@ -122,36 +123,42 @@ namespace BombPriceBot
                 {
                     foreach (var guild in _guilds)
                     {
-                        IEnumerable<SocketRole> roles = guild.Roles.Where(x => x.Name == green || x.Name == red);
+                        IEnumerable<SocketRole> roles = guild.Roles.Where(x => x.Name == green || x.Name == red || x.Name == zen);
 
-                        if (roles.Count() != 2)
+                        // Check to see if all 3 roles exist -- if they don't delete the ones that do and readd all 3.
+                        if (roles.Count() != s.Count)
                         {
                             foreach (SocketRole role in roles)
                             {
                                 await role.DeleteAsync();
                             }
-                        }
 
-                        foreach (string r in s)
-                        {
-                            SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == r);
-                            if (print == null)
+                            foreach (string r in s)
                             {
-                                Color c;
-                                string name;
-                                if (r == red)
+                                SocketRole print = guild.Roles.SingleOrDefault(x => x.Name == r);
+                                if (print == null)
                                 {
-                                    c = Color.Red;
-                                    name = red;
-                                }
-                                else
-                                {
-                                    name = green;
-                                    c = Color.Green;
-                                }
+                                    Color c;
+                                    string name;
+                                    if (r == red)
+                                    {
+                                        c = Color.Red;
+                                        name = red;
+                                    }
+                                    else if (r == zen)
+                                    {
+                                        c = Color.Gold;
+                                        name = zen;
+                                    }
+                                    else
+                                    {
+                                        name = green;
+                                        c = Color.Green;
+                                    }
 
-                                await guild.CreateRoleAsync(name, null, c, false, null);
-                                print = guild.Roles.SingleOrDefault(x => x.Name == name);
+                                    await guild.CreateRoleAsync(name, null, c, false, null);
+                                    print = guild.Roles.SingleOrDefault(x => x.Name == name);
+                                }
                             }
                         }
                     }
@@ -306,7 +313,6 @@ namespace BombPriceBot
             {
                 try
                 {
-                    //var consult = await _moneyOracle.ConsultAsync();
                     var consult = await _moneyTreasury.PreviousEpochBombPriceAsync();
 
                     string consultString = consult.ToString().PadLeft(18, '0');
@@ -319,29 +325,57 @@ namespace BombPriceBot
                         {
                             foreach (var guild in _guilds)
                             {
+                                // Using try-catches for logic is awful - change at some point
                                 ulong redU;
                                 ulong greenU;
+                                ulong zenU;
                                 try
                                 {
                                     redU = guild.Roles.SingleOrDefault(x => x.Name == red).Id;
                                     greenU = guild.Roles.SingleOrDefault(x => x.Name == green).Id;
+                                    zenU = guild.Roles.SingleOrDefault(x => x.Name == zen).Id;
                                 }
                                 catch
                                 {
                                     await AsyncVerifyRoles();
                                     redU = guild.Roles.SingleOrDefault(x => x.Name == red).Id;
                                     greenU = guild.Roles.SingleOrDefault(x => x.Name == green).Id;
+                                    zenU = guild.Roles.SingleOrDefault(x => x.Name == zen).Id;
                                 }
 
-                                if (consultD > (Decimal)1.01)
+                                ulong currentRole;
+                                try
                                 {
-                                    await guild.CurrentUser.RemoveRoleAsync(redU);
-                                    await guild.CurrentUser.AddRoleAsync(greenU);
+                                    currentRole = guild.CurrentUser.Roles.SingleOrDefault(x => x.Name == red || x.Name == green || x.Name == zen).Id;
                                 }
-                                else if (consultD < (Decimal)1.01)
+                                catch
                                 {
-                                    await guild.CurrentUser.RemoveRoleAsync(greenU);
-                                    await guild.CurrentUser.AddRoleAsync(redU);
+                                    currentRole = zenU;
+                                }
+
+                                if (consultD >= (Decimal)1.0 && consultD < (Decimal)1.01)
+                                {
+                                    if (currentRole != zenU)
+                                    {
+                                        await guild.CurrentUser.RemoveRoleAsync(currentRole);
+                                        await guild.CurrentUser.AddRoleAsync(zenU);
+                                    }
+                                }
+                                else if (consultD >= (Decimal)1.01)
+                                {
+                                    if (currentRole != greenU)
+                                    {
+                                        await guild.CurrentUser.RemoveRoleAsync(currentRole);
+                                        await guild.CurrentUser.AddRoleAsync(greenU);
+                                    }
+                                }
+                                else if (consultD < (Decimal)1.00)
+                                {
+                                    if (currentRole != redU)
+                                    {
+                                        await guild.CurrentUser.RemoveRoleAsync(currentRole);
+                                        await guild.CurrentUser.AddRoleAsync(redU);
+                                    }
                                 }
                             }
 
