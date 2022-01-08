@@ -21,16 +21,16 @@ namespace BombPriceBot
 
             if (message.StartsWith('?'))
             {
-                if (message.Equals("?") || message.Equals("?c"))
+                if (message.Equals("?c"))
                 {
                     embed.AddField(BuildCommandList());
                 }
-                else if (message.Contains("mcap"))
+                else if (message.Equals("?mcap"))
                 {
                     embed.AddField("Symbol", "BOMB", true);
                     embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap, false);
                 }
-                else if (message.Contains("rpc"))
+                else if (message.Equals("?rpc"))
                 {
                     embed.Title = "bomb.money custom RPC";
                     embed.AddField("Network Name:", "BSC Mainnet (BOMB RPC)", false);
@@ -39,12 +39,13 @@ namespace BombPriceBot
                     embed.AddField("Currency Symbol:", "BNB", false);
                     embed.AddField("Block Explorer:", "https://bscscan.com", false);
                 }
-                else
+                else if (message.Length > 1)
                 {
                     embed.AddField("Huh?", "wut dat mean? BUIDL'ING...", false);
                 }
 
-                return null;
+                if (embed.Fields.Count > 0)
+                    return embed.Build();
             }
 
             return null;

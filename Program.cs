@@ -351,6 +351,7 @@ namespace BombPriceBot
                                 catch
                                 {
                                     currentRole = zenU;
+                                    await guild.CurrentUser.AddRoleAsync(zenU);
                                 }
 
                                 if (consultD >= (Decimal)1.0 && consultD < (Decimal)1.01)
