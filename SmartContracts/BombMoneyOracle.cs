@@ -18,14 +18,19 @@ namespace BombPriceBot.SmartContracts
             TokenContract = tokenContract;
         }
 
-        public async Task<BigInteger> TWAPAsync()
+        public async Task<Decimal> TWAPAsync()
         {
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
                 var function = contract.GetFunction("twap");
 
-                return await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
+                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
+
+                string twapString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(twapString.Insert(4, ".")), 4);
+
+                return resultD;
             }
             catch
             {
@@ -33,14 +38,19 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public async Task<BigInteger> ConsultAsync()
+        public async Task<Decimal> ConsultAsync()
         {
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
                 var function = contract.GetFunction("consult");
 
-                return await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
+                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
+
+                return resultD;
             }
             catch
             {
@@ -56,14 +66,42 @@ namespace BombPriceBot.SmartContracts
 
         }
 
-        public async Task<BigInteger> GetBombPriceAsync()
+        public async Task<Decimal> GetBombPriceAsync()
         {
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
                 var function = contract.GetFunction("getBombPrice");
 
-                return await function.CallAsync<BigInteger>();
+                var result = await function.CallAsync<BigInteger>();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        /// <summary>
+        /// Gets the TWAP value that the epoch ended at. Used to determine what role to assign to the BombPriceBot
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Decimal> PreviousEpochBombPriceAsync()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("previousEpochBombPrice");
+
+                var result = await function.CallAsync<BigInteger>();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
+
+                return resultD;
             }
             catch
             {
@@ -71,14 +109,79 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public async Task<BigInteger> PreviousEpochBombPriceAsync()
+        public async Task<Decimal> GetTreasuryBalanceAsync()
         {
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("previousEpochBombPrice");
+                var function = contract.GetFunction("seigniorageSaved");
 
-                return await function.CallAsync<BigInteger>();
+                var result = await function.CallAsync<BigInteger>();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 6);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public Decimal GetTreasuryBalance()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("seigniorageSaved");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<Decimal> GetBombCirculatingSupplyAsync()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("getBombCirculatingSupply");
+
+                var result = await function.CallAsync<BigInteger>();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public Decimal GetBombCirculatingSupply()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("getBombCirculatingSupply");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                string resultString = result.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
+
+                return resultD;
             }
             catch
             {

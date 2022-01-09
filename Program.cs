@@ -57,7 +57,7 @@ namespace BombPriceBot
                     _ = AsyncGetLastEpochTWAP();
                     _ = AsyncGetTWAP();
                     _ = AsyncPollCMCData<CMCBomb>();
-                    _handler = new MessageHandler(_cmcBomb);
+                    _handler = new MessageHandler(_cmcBomb, _moneyTreasury);
                 }
                 else if (_configClass.TokenSymbol.Equals("BSHARE"))
                 {
@@ -288,10 +288,7 @@ namespace BombPriceBot
             {
                 try
                 {
-                    var twap = await _moneyOracle.TWAPAsync();
-
-                    string twapString = twap.ToString().PadLeft(18, '0');
-                    Decimal twapD = Decimal.Round(Decimal.Parse(twapString.Insert(4, ".")), 4);
+                    var twapD = await _moneyOracle.TWAPAsync();
 
                     WriteToConsole($"TWAP: {twapD}");
                     await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, "Printed: "));
@@ -313,10 +310,7 @@ namespace BombPriceBot
             {
                 try
                 {
-                    var consult = await _moneyTreasury.PreviousEpochBombPriceAsync();
-
-                    string consultString = consult.ToString().PadLeft(18, '0');
-                    Decimal consultD = Decimal.Round(Decimal.Parse(consultString.Insert(4, ".")), 4);
+                    var consultD = await _moneyTreasury.PreviousEpochBombPriceAsync();
 
                     if (_client.ConnectionState == ConnectionState.Connected)
                     {
