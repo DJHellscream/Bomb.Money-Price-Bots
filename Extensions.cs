@@ -8,8 +8,16 @@ using static System.Math;
 
 namespace BombPriceBot
 {
-    internal static class Extensions
+    public static class Extensions
     {
 
+    }
+
+    public static class Logging
+    {
+        public static void WriteToConsole(String message)
+        {
+            Console.WriteLine(message);
+        }
     }
 }

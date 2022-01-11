@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Web;
 using BombPriceBot.SmartContracts;
 using System.Timers;
+using BombPriceBot.Database;
 
 namespace BombPriceBot
 {
@@ -36,6 +37,8 @@ namespace BombPriceBot
         {
             try
             {
+                using var dbContext = new SQLiteDbContext();
+                dbContext.Database.EnsureDeleted();
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
                 _moneyOracle = new BombMoneyOracle(_configClass.BscScanRPC, _configClass.OracleContract, _configClass.OracleABI, _configClass.TokenContract);
                 _moneyTreasury = new BombMoneyTreasury(_configClass.BscScanRPC, _configClass.TreasuryContract, _configClass.TreasuryABI);
@@ -69,7 +72,7 @@ namespace BombPriceBot
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logging.WriteToConsole(ex.ToString());
             }
 
             t.Stop();
@@ -104,12 +107,14 @@ namespace BombPriceBot
                 string format = @"hh\:mm\:ss";
                 string displayString = timeRemaining.ToString(format);
 
-                WriteToConsole($"Epoch timer: {displayString}");
+                Logging.WriteToConsole($"Epoch timer: {displayString}");
                 _client.SetActivityAsync(new Game($"EPOCH: {displayString}", ActivityType.Watching, ActivityProperties.None, string.Empty));
+
+                RecordEpochData();
             }
             catch (Exception ex)
             {
-                WriteToConsole($"Error updating epoch time: {ex}");
+                Logging.WriteToConsole($"Error updating epoch time: {ex}");
             }
         }
 
@@ -166,13 +171,13 @@ namespace BombPriceBot
             }
             catch (Exception e)
             {
-                WriteToConsole(e.ToString());
+                Logging.WriteToConsole(e.ToString());
             }
         }
 
         private async Task _client_MessageReceived(SocketMessage arg)
         {
-            WriteToConsole($"Message Received: {arg.Channel} | {arg.Author} | {arg.Content}");
+            Logging.WriteToConsole($"Message Received: {arg.Channel} | {arg.Author} | {arg.Content}");
             if (arg.Author.IsBot)
                 return;
 
@@ -187,19 +192,19 @@ namespace BombPriceBot
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
         {
-            WriteToConsole($"Guild Updated: {arg1.Name} : {arg2.Name}");
+            Logging.WriteToConsole($"Guild Updated: {arg1.Name} : {arg2.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
         private async Task _client_GuildAvailable(SocketGuild arg)
         {
-            WriteToConsole($"Guild Available: {arg.Name}");
+            Logging.WriteToConsole($"Guild Available: {arg.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
         private async Task _client_JoinedGuild(SocketGuild arg)
         {
-            WriteToConsole($"Guild Joined: {arg.Name}");
+            Logging.WriteToConsole($"Guild Joined: {arg.Name}");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
@@ -219,7 +224,7 @@ namespace BombPriceBot
             }
             catch
             {
-                WriteToConsole("Unable to read discord token from token.txt. " +
+                Logging.WriteToConsole("Unable to read discord token from token.txt. " +
                     "Please ensure file exists and correct access token is there." +
                     Environment.NewLine + "Exiting in 10seconds.");
                 await Task.Delay(10);
@@ -231,7 +236,7 @@ namespace BombPriceBot
 
         private async Task AsyncGetPrice()
         {
-            WriteToConsole($"Getting price from {_configClass.Provider}");
+            Logging.WriteToConsole($"Getting price from {_configClass.Provider}");
 
             int timeToWait = _configClass.TimeToUpdatePrice;
             while (true)
@@ -267,14 +272,14 @@ namespace BombPriceBot
                                 });
                             }
                         else
-                            WriteToConsole("Bot is not a part of any guilds.");
+                            Logging.WriteToConsole("Bot is not a part of any guilds.");
 
-                        WriteToConsole(newNick);
+                        Logging.WriteToConsole(newNick);
                     }
                 }
                 catch (Exception e)
                 {
-                    WriteToConsole(e.ToString());
+                    Logging.WriteToConsole(e.ToString());
                 }
 
                 await Task.Delay(timeToWait);
@@ -283,19 +288,19 @@ namespace BombPriceBot
 
         private async Task AsyncGetTWAP()
         {
-            WriteToConsole("Getting TWAP");
+            Logging.WriteToConsole("Getting TWAP");
             while (true)
             {
                 try
                 {
                     var twapD = await _moneyOracle.TWAPAsync();
 
-                    WriteToConsole($"TWAP: {twapD}");
-                    await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, "Printed: "));
+                    Logging.WriteToConsole($"TWAP: {twapD}");
+                    await _client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, null));
                 }
                 catch (Exception e)
                 {
-                    WriteToConsole(e.ToString());
+                    Logging.WriteToConsole(e.ToString());
                 }
 
                 //Pause for 10seconds
@@ -305,7 +310,7 @@ namespace BombPriceBot
 
         private async Task<object> AsyncGetLastEpochTWAP()
         {
-            WriteToConsole("Getting Previous Epoch Bomb Price");
+            Logging.WriteToConsole("Getting Previous Epoch Bomb Price");
             while (true)
             {
                 try
@@ -374,7 +379,7 @@ namespace BombPriceBot
                                 }
                             }
 
-                            WriteToConsole($"PrevBombPrice: {consultD}");
+                            Logging.WriteToConsole($"PrevBombPrice: {consultD}");
                         }
                     }
 
@@ -383,8 +388,25 @@ namespace BombPriceBot
                 }
                 catch (Exception e)
                 {
-                    WriteToConsole(e.ToString());
+                    Logging.WriteToConsole(e.ToString());
                 }
+            }
+        }
+
+        private void RecordEpochData()
+        {
+            try
+            {
+                BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(_moneyOracle.GetCurrentEpoch() - 1, _moneyTreasury.PreviousEpochBombPrice(), null);
+
+                if (newRecord != null)
+                {
+
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.WriteToConsole(e.ToString());
             }
         }
 
@@ -420,12 +442,12 @@ namespace BombPriceBot
                 }
                 else
                 {
-                    WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+                    Logging.WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
                 }
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logging.WriteToConsole(ex.ToString());
             }
             finally
             {
@@ -462,7 +484,7 @@ namespace BombPriceBot
             }
             else
             {
-                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+                Logging.WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
             }
 
             client.Dispose();
@@ -506,7 +528,7 @@ namespace BombPriceBot
             }
             else
             {
-                WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
+                Logging.WriteToConsole(String.Format("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase));
             }
 
             moralisClient.Dispose();
@@ -530,11 +552,6 @@ namespace BombPriceBot
         {
             Console.WriteLine(msg.ToString());
             return Task.CompletedTask;
-        }
-
-        public void WriteToConsole(String message)
-        {
-            Console.WriteLine(message);
         }
     }
 }

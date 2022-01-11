@@ -27,10 +27,7 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
 
-                string twapString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(twapString.Insert(4, ".")), 4);
-
-                return resultD;
+                return FormatNumberAsDecimal(result, 4, 4);
             }
             catch
             {
@@ -47,10 +44,24 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
+                return FormatNumberAsDecimal(result, 4, 4);
+            }
+            catch
+            {
+                throw;
+            }
+        }
 
-                return resultD;
+        public int GetCurrentEpoch()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("getCurrentEpoch");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                return (int)result;
             }
             catch
             {
@@ -75,10 +86,7 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
-
-                return resultD;
+                return FormatNumberAsDecimal(result, 4, 4);
             }
             catch
             {
@@ -98,10 +106,28 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(4, ".")), 4);
+                return FormatNumberAsDecimal(result, 4, 4);
+            }
+            catch
+            {
+                throw;
+            }
+        }
 
-                return resultD;
+        /// <summary>
+        /// Gets the TWAP value that the epoch ended at. Used to determine what role to assign to the BombPriceBot
+        /// </summary>
+        /// <returns></returns>
+        public Decimal PreviousEpochBombPrice()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("previousEpochBombPrice");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                return FormatNumberAsDecimal(result, 4, 4);
             }
             catch
             {
@@ -118,10 +144,7 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 6);
-
-                return resultD;
+                return FormatNumberAsDecimal(result, 6, 0);
             }
             catch
             {
@@ -138,10 +161,7 @@ namespace BombPriceBot.SmartContracts
 
                 var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
-
-                return resultD;
+                return FormatNumberAsDecimal(result, 6, 0);
             }
             catch
             {
@@ -158,10 +178,7 @@ namespace BombPriceBot.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
-
-                return resultD;
+                return FormatNumberAsDecimal(result, 6, 0);
             }
             catch
             {
@@ -178,10 +195,24 @@ namespace BombPriceBot.SmartContracts
 
                 var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
 
-                string resultString = result.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(6, ".")), 0);
+                return FormatNumberAsDecimal(result, 6, 0);
+            }
+            catch
+            {
+                throw;
+            }
+        }
 
-                return resultD;
+        public int GetEpoch()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("epoch");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                return (int)result;
             }
             catch
             {
@@ -203,6 +234,21 @@ namespace BombPriceBot.SmartContracts
             Client = new Web3(url);
             ContractAddress = contract;
             ABI = abi;
+        }
+
+        internal static Decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals)
+        {
+            try
+            {
+                string resultString = number.ToString().PadLeft(18, '0');
+                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(startIndex, ".")), decimals);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
         }
     }
 }
