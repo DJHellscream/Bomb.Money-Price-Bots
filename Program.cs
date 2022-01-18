@@ -418,8 +418,10 @@ namespace BombPriceBot
                                 else if (newRecord.TWAP < (Decimal)1)
                                     c = Color.Red;
 
-                                EmbedBuilder embed = new EmbedBuilder();
-                                embed.Title = $"Epoch {newRecord.Epoch}";
+                                EmbedBuilder embed = new()
+                                {
+                                    Title = $"Epoch {newRecord.Epoch}"
+                                };
                                 embed.AddField("TWAP:", newRecord.TWAP, true);
                                 embed.Timestamp = newRecord.Created;
                                 embed.WithColor(c);
@@ -428,7 +430,7 @@ namespace BombPriceBot
                                 await chnl.SendMessageAsync(null, false, embed.Build(), null, null, null, null, null, null);
                             }
                             else
-                                Console.WriteLine($"Channel 'twap' not found.");
+                                Console.WriteLine($"Channel '{boardroomHistory}' not found.");
                         }
                     }
                 }
