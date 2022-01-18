@@ -16,6 +16,7 @@ using System.Web;
 using BombPriceBot.SmartContracts;
 using System.Timers;
 using BombPriceBot.Database;
+using System.Diagnostics;
 
 namespace BombPriceBot
 {
@@ -24,6 +25,7 @@ namespace BombPriceBot
         private static readonly string red = "BoardroomPrinterRed";
         private static readonly string green = "BoardroomPrinterGreen";
         private static readonly string zen = "BoardroomPrinterZen";
+        private static readonly string boardroomHistory = "boardroom-history";
         IReadOnlyCollection<SocketGuild> _guilds;
         AConfigurationClass _configClass;
         DiscordSocketClient _client;
@@ -37,8 +39,6 @@ namespace BombPriceBot
         {
             try
             {
-                using var dbContext = new SQLiteDbContext();
-                dbContext.Database.EnsureDeleted();
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
                 _moneyOracle = new BombMoneyOracle(_configClass.BscScanRPC, _configClass.OracleContract, _configClass.OracleABI, _configClass.TokenContract);
                 _moneyTreasury = new BombMoneyTreasury(_configClass.BscScanRPC, _configClass.TreasuryContract, _configClass.TreasuryABI);
@@ -393,7 +393,7 @@ namespace BombPriceBot
             }
         }
 
-        private void RecordEpochData()
+        private async void RecordEpochData()
         {
             try
             {
@@ -401,7 +401,36 @@ namespace BombPriceBot
 
                 if (newRecord != null)
                 {
+                    if (_guilds != null && _guilds.Count > 0)
+                    {
+                        foreach (var guild in _guilds)
+                        {
+                            // follow the AsyncVerifyRoles method but for channels instead.
+                            SocketGuildChannel channel = guild.Channels.FirstOrDefault(x => x.Name == boardroomHistory);
 
+                            if (channel != null)
+                            {
+                                Color c = Color.Gold;
+                                var chnl = _client.GetChannel(channel.Id) as IMessageChannel;
+
+                                if (newRecord.TWAP >= (Decimal)1.01)
+                                    c = Color.Green;
+                                else if (newRecord.TWAP < (Decimal)1)
+                                    c = Color.Red;
+
+                                EmbedBuilder embed = new EmbedBuilder();
+                                embed.Title = $"Epoch {newRecord.Epoch}";
+                                embed.AddField("TWAP:", newRecord.TWAP, true);
+                                embed.Timestamp = newRecord.Created;
+                                embed.WithColor(c);
+                                //embed.ThumbnailUrl = "https://app.bomb.money/bomb1.png";
+
+                                await chnl.SendMessageAsync(null, false, embed.Build(), null, null, null, null, null, null);
+                            }
+                            else
+                                Console.WriteLine($"Channel 'twap' not found.");
+                        }
+                    }
                 }
             }
             catch (Exception e)

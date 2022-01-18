@@ -35,14 +35,15 @@ namespace BombPriceBot.Database
                 dbContext.BoardroomData.Add(newRecord);
 
                 dbContext.SaveChanges();
-                Logging.WriteToConsole($"Saved record to DB:");
-                dbContext.BoardroomData?.ToList().ForEach(bd =>
-                {
-                    Logging.WriteToConsole($"{bd.Epoch} TWAP: {bd.TWAP} PEG: {bd.PEG} Recorded: {bd.Created}");
-                });
+                Logging.WriteToConsole($"Saved record to DB: {newRecord}");
             }
 
             return newRecord;
+        }
+
+        public override string ToString()
+        {
+            return $"EPOCH: {this.Epoch} TWAP: {this.TWAP} PEG: {this.PEG} Recorded: {this.Created}";
         }
     }
 }
