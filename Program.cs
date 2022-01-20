@@ -397,6 +397,8 @@ namespace BombPriceBot
         {
             try
             {
+                // Waiting 5 seconds
+                await Task.Delay(5000);
                 BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(_moneyOracle.GetCurrentEpoch() - 1, _moneyTreasury.PreviousEpochBombPrice(), null);
 
                 if (newRecord != null)
