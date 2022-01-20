@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Math;
 
-namespace BombPriceBot
+namespace BombMoney
 {
     public static class Extensions
     {
@@ -15,7 +15,7 @@ namespace BombPriceBot
 
     public static class Logging
     {
-        public static void WriteToConsole(String message)
+        public static void WriteToConsole(string message)
         {
             Console.WriteLine(message);
         }

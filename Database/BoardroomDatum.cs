@@ -1,21 +1,22 @@
-﻿using System;
+﻿using BombMoney.Database;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot.Database
+namespace BombMoney.Database
 {
     public class BoardroomDatum
     {
         public int BoardroomDataID { get; set; }
         public int Epoch { get; set; }
-        public Decimal TWAP { get; set; }
-        public Decimal? PEG { get; set; }
+        public decimal TWAP { get; set; }
+        public decimal? PEG { get; set; }
         public DateTime Created { get; set; }
 
-        public static BoardroomDatum RecordBoardRoomData(int epoch, Decimal twap, Decimal? peg)
+        public static BoardroomDatum RecordBoardRoomData(int epoch, decimal twap, decimal? peg)
         {
             // check if previous epoch was recorded
             // If not record previous epoch data
@@ -28,7 +29,7 @@ namespace BombPriceBot.Database
                 newRecord = new BoardroomDatum()
                 {
                     Epoch = epoch,
-                    TWAP = (Decimal)twap,
+                    TWAP = twap,
                     PEG = peg,
                     Created = DateTime.Now,
                 };
@@ -43,7 +44,7 @@ namespace BombPriceBot.Database
 
         public override string ToString()
         {
-            return $"EPOCH: {this.Epoch} TWAP: {this.TWAP} PEG: {this.PEG} Recorded: {this.Created}";
+            return $"EPOCH: {Epoch} TWAP: {TWAP} PEG: {PEG} Recorded: {Created}";
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace BombPriceBot
+﻿namespace BombMoney
 {
-    internal class AConfigurationClass
+    public class AConfigurationClass
     {
         public string TokenContract { get; set; }
         public string TokenSymbol { get; set; }
@@ -21,10 +21,10 @@
         public string BSHAREBNBLP { get; set; }
     }
 
-    internal enum Provider
+    public enum Provider
     {
         PCS = 0,
-        Moralis = 1,
+        MRS = 1,
         CMC = 2,
     }
 }

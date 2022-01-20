@@ -1,21 +1,23 @@
-﻿using BombPriceBot.SmartContracts;
+﻿using BombMoney.ResponseObjects;
+using BombMoney.SmartContracts;
 using Discord;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot
+namespace BombMoney
 {
-    internal class MessageHandler
+    public class MessageHandler
     {
-        readonly BombMoneyTreasury _treasury;
-        readonly CMCBomb _cmcBomb;
+        public BombMoneyTreasury Treasury { get; set; }
+        public CMCBomb CMCBomb { get; set; }
         public MessageHandler(CMCBomb cmcBomb, BombMoneyTreasury treasury)
         {
-            _cmcBomb = cmcBomb;
-            _treasury = treasury;
+            CMCBomb = cmcBomb;
+            Treasury = treasury;
         }
 
         public Embed ProcessMessage(string message)
@@ -70,7 +72,7 @@ namespace BombPriceBot
             return efb;
         }
 
-        private void BuildRPCFields(EmbedBuilder embed)
+        private static void BuildRPCFields(EmbedBuilder embed)
         {
             embed.Title = "bomb.money custom RPC";
             embed.AddField("Network Name:", "BSC Mainnet (BOMB RPC)", false);
@@ -83,9 +85,9 @@ namespace BombPriceBot
         private void BuildStatsFields(EmbedBuilder embed)
         {
             embed.AddField("Symbol", "BOMB", true);
-            embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap.ToString("N0"), false);
-            embed.AddField($"Circulating Supply: ", _treasury.GetBombCirculatingSupply().ToString("N0"), false);
-            embed.AddField($"Treasury Balance: ", _treasury.GetTreasuryBalance().ToString("N0"), false);
+            embed.AddField($"Fully Diluted MarketCap: ", CMCBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap.ToString("N0"), false);
+            embed.AddField($"Circulating Supply: ", Treasury.GetBombCirculatingSupply().ToString("N0"), false);
+            embed.AddField($"Treasury Balance: ", Treasury.GetTreasuryBalance().ToString("N0"), false);
         }
     }
 }

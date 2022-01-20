@@ -7,9 +7,9 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BombPriceBot.SmartContracts
+namespace BombMoney.SmartContracts
 {
-    internal class BombMoneyOracle : SmartContract
+    public class BombMoneyOracle : SmartContract
     {
         public string TokenContract { get; set; }
 
@@ -18,7 +18,7 @@ namespace BombPriceBot.SmartContracts
             TokenContract = tokenContract;
         }
 
-        public async Task<Decimal> TWAPAsync()
+        public async Task<decimal> TWAPAsync()
         {
             try
             {
@@ -35,7 +35,7 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public async Task<Decimal> ConsultAsync()
+        public async Task<decimal> ConsultAsync()
         {
             try
             {
@@ -70,14 +70,14 @@ namespace BombPriceBot.SmartContracts
         }
     }
 
-    internal class BombMoneyTreasury : SmartContract
+    public class BombMoneyTreasury : SmartContract
     {
         public BombMoneyTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
         {
 
         }
 
-        public async Task<Decimal> GetBombPriceAsync()
+        public async Task<decimal> GetBombPriceAsync()
         {
             try
             {
@@ -97,7 +97,7 @@ namespace BombPriceBot.SmartContracts
         /// Gets the TWAP value that the epoch ended at. Used to determine what role to assign to the BombPriceBot
         /// </summary>
         /// <returns></returns>
-        public async Task<Decimal> PreviousEpochBombPriceAsync()
+        public async Task<decimal> PreviousEpochBombPriceAsync()
         {
             try
             {
@@ -118,7 +118,7 @@ namespace BombPriceBot.SmartContracts
         /// Gets the TWAP value that the epoch ended at. Used to determine what role to assign to the BombPriceBot
         /// </summary>
         /// <returns></returns>
-        public Decimal PreviousEpochBombPrice()
+        public decimal PreviousEpochBombPrice()
         {
             try
             {
@@ -135,7 +135,7 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public async Task<Decimal> GetTreasuryBalanceAsync()
+        public async Task<decimal> GetTreasuryBalanceAsync()
         {
             try
             {
@@ -152,7 +152,7 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public Decimal GetTreasuryBalance()
+        public decimal GetTreasuryBalance()
         {
             try
             {
@@ -169,7 +169,7 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public async Task<Decimal> GetBombCirculatingSupplyAsync()
+        public async Task<decimal> GetBombCirculatingSupplyAsync()
         {
             try
             {
@@ -186,7 +186,7 @@ namespace BombPriceBot.SmartContracts
             }
         }
 
-        public Decimal GetBombCirculatingSupply()
+        public decimal GetBombCirculatingSupply()
         {
             try
             {
@@ -221,7 +221,7 @@ namespace BombPriceBot.SmartContracts
         }
     }
 
-    internal abstract class SmartContract
+    public abstract class SmartContract
     {
         public Web3 Client { get; set; }
 
@@ -236,12 +236,12 @@ namespace BombPriceBot.SmartContracts
             ABI = abi;
         }
 
-        internal static Decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals)
+        internal static decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals)
         {
             try
             {
                 string resultString = number.ToString().PadLeft(18, '0');
-                Decimal resultD = Decimal.Round(Decimal.Parse(resultString.Insert(startIndex, ".")), decimals);
+                decimal resultD = decimal.Round(decimal.Parse(resultString.Insert(startIndex, ".")), decimals);
 
                 return resultD;
             }
