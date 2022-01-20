@@ -78,7 +78,7 @@ namespace BombMoney.Bots
                     catch
                     {
                         EmbedBuilder embedBuilder = new EmbedBuilder();
-                        embedBuilder.Title = "You typed it wrong, dummy <:kek:899972445467975680>";
+                        embedBuilder.Title = "You typed it wrong, dummy <:doxxedbifkn:928415925483487272>";
                         embed = embedBuilder.Build();
                     }
                 }
