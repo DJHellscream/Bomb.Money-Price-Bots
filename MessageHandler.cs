@@ -48,7 +48,7 @@ namespace BombPriceBot
             }
             catch (Exception ex)
             {
-                WriteToConsole(ex.ToString());
+                Logging.WriteToConsole(ex.ToString());
             }
 
             return null;
@@ -86,11 +86,6 @@ namespace BombPriceBot
             embed.AddField($"Fully Diluted MarketCap: ", _cmcBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap.ToString("N0"), false);
             embed.AddField($"Circulating Supply: ", _treasury.GetBombCirculatingSupply().ToString("N0"), false);
             embed.AddField($"Treasury Balance: ", _treasury.GetTreasuryBalance().ToString("N0"), false);
-        }
-
-        public void WriteToConsole(String message)
-        {
-            Console.WriteLine(message);
         }
     }
 }
