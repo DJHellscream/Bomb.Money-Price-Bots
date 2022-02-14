@@ -19,6 +19,8 @@
         public string CMCTokenID { get; set; }
         public string BOMBBTCLP { get; set; }
         public string BSHAREBNBLP { get; set; }
+        public string xBOMBABI { get; set; }
+        public string xBOMBCONTRACT { get; set; }
     }
 
     public enum Provider

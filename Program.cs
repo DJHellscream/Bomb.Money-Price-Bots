@@ -29,6 +29,7 @@ namespace BombMoney
         DiscordSocketClient _client;
         BombMoneyOracle _moneyOracle;
         BombMoneyTreasury _moneyTreasury;
+        xBomb _xBomb;
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
@@ -38,6 +39,7 @@ namespace BombMoney
                 _configClass = JsonConvert.DeserializeObject<AConfigurationClass>(File.ReadAllText("config.json"));
                 _moneyOracle = new BombMoneyOracle(_configClass.BscScanRPC, _configClass.OracleContract, _configClass.OracleABI, _configClass.TokenContract);
                 _moneyTreasury = new BombMoneyTreasury(_configClass.BscScanRPC, _configClass.TreasuryContract, _configClass.TreasuryABI);
+                _xBomb = new xBomb(_configClass.BscScanRPC, _configClass.xBOMBCONTRACT, _configClass.xBOMBABI);
 
                 await LoginAndConnect();
 
@@ -58,9 +60,13 @@ namespace BombMoney
                 {
                     bot = new BshareBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds);
                 }
-                else
+                else if (_configClass.TokenSymbol.Equals("BTC"))
                 {
                     bot = new BTCBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds);
+                }
+                else if(_configClass.TokenSymbol.Equals("xBOMB"))
+                {
+                    bot = new xBombBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds, _xBomb);
                 }
 
                 bot.Start();

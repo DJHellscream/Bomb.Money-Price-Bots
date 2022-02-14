@@ -221,6 +221,46 @@ namespace BombMoney.SmartContracts
         }
     }
 
+    public class xBomb : SmartContract
+    {
+        public xBomb(string url, string xBOMBContract, string abi) : base(url, xBOMBContract, abi)
+        { }
+
+        public decimal GetExchangeRate()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("getExchangeRate");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                return FormatNumberAsDecimal(result, 1, 4);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public decimal GetTotalSupply()
+        {
+            try
+            {
+                var contract = Client.Eth.GetContract(ABI, ContractAddress);
+                var function = contract.GetFunction("totalSupply");
+
+                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
+
+                return FormatNumberAsDecimal(result, 6, 0);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+    }
+
     public abstract class SmartContract
     {
         public Web3 Client { get; set; }
