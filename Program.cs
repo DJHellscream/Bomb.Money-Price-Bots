@@ -46,6 +46,7 @@ namespace BombMoney
                 _client.JoinedGuild += _client_JoinedGuild;
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
+                _client.LeftGuild += _client_LeftGuild;
 
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
                 await Task.Delay(3000);
@@ -97,6 +98,12 @@ namespace BombMoney
         private async Task _client_JoinedGuild(SocketGuild arg)
         {
             Logging.WriteToConsole($"Guild Joined: {arg.Name}");
+            await Task.Run(() => { _guilds = _client.Guilds; });
+        }
+
+        private async Task _client_LeftGuild(SocketGuild arg)
+        {
+            Logging.WriteToConsole("Guild Updated.");
             await Task.Run(() => { _guilds = _client.Guilds; });
         }
 
