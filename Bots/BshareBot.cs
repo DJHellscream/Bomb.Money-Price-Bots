@@ -74,7 +74,8 @@ namespace BombMoney.Bots
             {
                 // Waiting 5 seconds
                 await Task.Delay(5000);
-                BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(MoneyOracle.GetCurrentEpoch() - 1, MoneyTreasury.PreviousEpochBombPrice(), null);
+                int epoch = MoneyOracle.GetCurrentEpoch() + 2;
+                BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(epoch, MoneyTreasury.PreviousEpochBombPrice(), null);
 
                 if (newRecord != null)
                 {
@@ -83,7 +84,7 @@ namespace BombMoney.Bots
                         foreach (var guild in SocketGuilds)
                         {
                             // follow the AsyncVerifyRoles method but for channels instead.
-                            SocketGuildChannel channel = guild.Channels.FirstOrDefault(x => x.Name == boardroomHistory);
+                            SocketGuildChannel channel = guild.Channels.FirstOrDefault(x => x.Name.Contains(boardroomHistory));
 
                             if (channel != null)
                             {
@@ -102,14 +103,17 @@ namespace BombMoney.Bots
                                 embed.AddField("TWAP:", newRecord.TWAP, true);
                                 embed.Timestamp = newRecord.Created;
                                 embed.WithColor(c);
-                                //embed.ThumbnailUrl = "https://app.bomb.money/bomb1.png";
 
                                 await chnl.SendMessageAsync(null, false, embed.Build(), null, null, null, null, null, null);
                             }
                             else
-                                Console.WriteLine($"Channel '{boardroomHistory}' not found.");
+                                Logging.WriteToConsole($"Channel '{boardroomHistory}' not found.");
                         }
                     }
+                }
+                else
+                {
+                    Logging.WriteToConsole($"Epoch {epoch} already recorded.");
                 }
             }
             catch (Exception e)
