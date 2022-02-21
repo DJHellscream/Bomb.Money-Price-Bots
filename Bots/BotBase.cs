@@ -134,7 +134,7 @@ namespace BombMoney.Bots
                         else
                             Logging.WriteToConsole("Bot is not a part of any guilds.");
 
-                        Logging.WriteToConsole(newNick);
+                        Logging.WriteToConsole($"{newNick} - {Config.Provider}");
                     }
                 }
                 catch (Exception e)

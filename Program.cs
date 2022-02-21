@@ -47,9 +47,11 @@ namespace BombMoney
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
                 _client.LeftGuild += _client_LeftGuild;
-
+                
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
-                await Task.Delay(3000);
+
+                Logging.WriteToConsole("Waiting for Connection");
+                await Task.Delay(7000).ConfigureAwait(false);
 
                 BotBase bot = null;
 
