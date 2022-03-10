@@ -28,7 +28,7 @@ namespace BombMoney
                 if (message.ToLower().Equals("wen peg") || message.ToLower().Equals("wen print"))
                 {
                     Random rand = new Random();
-                    int choice = rand.Next(1, 2);
+                    int choice = rand.Next(1, 3);
                     switch (choice)
                     {
                         case 1:
