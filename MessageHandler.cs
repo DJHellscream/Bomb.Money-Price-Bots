@@ -25,7 +25,7 @@ namespace BombMoney
             EmbedBuilder embed = new EmbedBuilder();
             try
             {
-                if (message.Equals("wen peg") || message.Equals("wen print"))
+                if (message.ToLower().Equals("wen peg") || message.ToLower().Equals("wen print"))
                 {
                     Random rand = new Random();
                     int choice = rand.Next(1, 2);
@@ -43,23 +43,30 @@ namespace BombMoney
 
                     return embed.Build();
                 }
-                else if (message.Equals("wen lambo"))
+                else if (message.ToLower().Equals("wen lambo"))
                 {
                     embed.AddField("Acquiring funds", "Calling dealership....", false);
                     return embed.Build();
                 }
-
-                if (message.StartsWith('?'))
+                else if (message.ToLower().Equals("lfg"))
                 {
-                    if (message.Equals("?c"))
+                    embed.AddField("Yeah baby!", "LFG", false);
+                    embed.ImageUrl = "https://media.giphy.com/media/73oW01Plu9O5HAOdEH/giphy.gif";
+
+                    return embed.Build();
+                }
+
+                if (message.ToLower().StartsWith('?'))
+                {
+                    if (message.ToLower().Equals("?c"))
                     {
                         embed.AddField(BuildCommandList());
                     }
-                    else if (message.Equals("?rpc"))
+                    else if (message.ToLower().Equals("?rpc"))
                     {
                         BuildRPCFields(embed);
                     }
-                    else if (message.Equals("?stats") || message.Equals("?s"))
+                    else if (message.ToLower().Equals("?stats") || message.ToLower().Equals("?s"))
                     {
                         BuildStatsFields(embed);
                     }
