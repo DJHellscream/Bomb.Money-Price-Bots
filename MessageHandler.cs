@@ -25,6 +25,30 @@ namespace BombMoney
             EmbedBuilder embed = new EmbedBuilder();
             try
             {
+                if (message.Equals("wen peg") || message.Equals("wen print"))
+                {
+                    Random rand = new Random();
+                    int choice = rand.Next(1, 2);
+                    switch (choice)
+                    {
+                        case 1:
+                            embed.AddField("ok bro", "buy more bomb then we can talk <:doxxedbifkn:928415925483487272>", false);
+                            break;
+                        case 2:
+                            embed.AddField("obviously....", "next epoch <a:Bombnuke:928267878296338523>", false);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    return embed.Build();
+                }
+                else if (message.Equals("wen lambo"))
+                {
+                    embed.AddField("Acquiring funds", "Calling dealership....", false);
+                    return embed.Build();
+                }
+
                 if (message.StartsWith('?'))
                 {
                     if (message.Equals("?c"))

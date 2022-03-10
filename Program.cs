@@ -19,6 +19,7 @@ using BombMoney.Bots;
 using BombMoney.ResponseObjects;
 using BombMoney.SmartContracts;
 using BombMoney.Database;
+using System.Net.WebSockets;
 
 namespace BombMoney
 {
@@ -72,6 +73,8 @@ namespace BombMoney
                     bot = new xBombBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds, _xBomb);
                 }
 
+                TestPublish();
+
                 bot.Start();
 
                 // Block this task until the program is closed.
@@ -83,6 +86,11 @@ namespace BombMoney
             }
 
             _client.Dispose();
+        }
+
+        public void TestPublish()
+        {            
+                        
         }
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)

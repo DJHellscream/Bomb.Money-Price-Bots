@@ -16,11 +16,12 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.2" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="6.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.2" />
-    <PackageReference Include="Nethereum.ABI" Version="4.1.1" />
-    <PackageReference Include="Nethereum.Accounts" Version="4.1.1" />
-    <PackageReference Include="Nethereum.Contracts" Version="4.1.1" />
-    <PackageReference Include="Nethereum.Hex" Version="4.1.1" />
-    <PackageReference Include="Nethereum.Web3" Version="4.1.1" />
+    <PackageReference Include="Nethereum.ABI" Version="4.2.0" />
+    <PackageReference Include="Nethereum.Accounts" Version="4.2.0" />
+    <PackageReference Include="Nethereum.Contracts" Version="4.2.0" />
+    <PackageReference Include="Nethereum.Hex" Version="4.2.0" />
+    <PackageReference Include="Nethereum.Web3" Version="4.2.0" />
+    <PackageReference Include="WebSocket4Net" Version="0.15.2" />
   </ItemGroup>
 
   <ItemGroup>
