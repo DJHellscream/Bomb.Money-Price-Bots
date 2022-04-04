@@ -35,7 +35,8 @@ namespace BombMoney
                             embed.AddField("ok bro", "buy more bomb then we can talk <:doxxedbifkn:928415925483487272>", false);
                             break;
                         case 2:
-                            embed.AddField("obviously....", "next epoch <a:Bombnuke:928267878296338523>", false);
+                            embed.AddField("Peek this", "<a:Bombnuke:928267878296338523>", false);
+                            embed.ImageUrl = "https://i.imgur.com/zceO5Mx.png";
                             break;
                         default:
                             break;
@@ -46,12 +47,28 @@ namespace BombMoney
                 else if (message.ToLower().Equals("wen lambo"))
                 {
                     embed.AddField("Acquiring funds", "Calling dealership....", false);
+                    embed.AddField("Offer accepted", "Lambo acquired!", true);
+                    embed.ImageUrl = "https://media.giphy.com/media/l46Cw3404vdkvNqAU/giphy.gif";
                     return embed.Build();
                 }
                 else if (message.ToLower().Equals("lfg"))
                 {
                     embed.AddField("Yeah baby!", "LFG", false);
                     embed.ImageUrl = "https://media.giphy.com/media/73oW01Plu9O5HAOdEH/giphy.gif";
+
+                    return embed.Build();
+                }
+                else if (message.ToLower().Equals("huddleup") || message.ToLower().Equals("huddle up"))
+                {
+                    embed.AddField("BOMBERS...", "Get in here!", false);
+                    embed.ImageUrl = "https://media.giphy.com/media/YBIZvOEg4vp3bav3ki/giphy.gif";
+
+                    return embed.Build();
+                }
+                else if (message.ToLower().Equals("wen 5b tvl"))
+                {
+                    embed.AddField("Deal...", "!", false);
+                    embed.ImageUrl = "https://i.imgur.com/4z9tkE8.png";
 
                     return embed.Build();
                 }
@@ -69,10 +86,6 @@ namespace BombMoney
                     else if (message.ToLower().Equals("?stats") || message.ToLower().Equals("?s"))
                     {
                         BuildStatsFields(embed);
-                    }
-                    else if (message.Length > 1)
-                    {
-                        embed.AddField("Huh?", "wut dat mean? BUIDL'ING...", false);
                     }
 
                     if (embed.Fields.Count > 0)

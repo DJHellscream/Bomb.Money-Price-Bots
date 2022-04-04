@@ -48,7 +48,7 @@ namespace BombMoney
                 _client.GuildAvailable += _client_GuildAvailable;
                 _client.GuildUpdated += _client_GuildUpdated;
                 _client.LeftGuild += _client_LeftGuild;
-                
+
                 _client.Ready += () => { Console.WriteLine("Bot is connected!"); return Task.CompletedTask; };
 
                 Logging.WriteToConsole("Waiting for Connection");
@@ -68,12 +68,14 @@ namespace BombMoney
                 {
                     bot = new BTCBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds);
                 }
-                else if(_configClass.TokenSymbol.Equals("xBOMB"))
+                else if (_configClass.TokenSymbol.Equals("xBOMB"))
                 {
                     bot = new xBombBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds, _xBomb);
                 }
-
-                TestPublish();
+                else if (_configClass.TokenSymbol.Equals("BUSM"))
+                {
+                    bot = new BUSMBot(_configClass, _client, _moneyOracle, _moneyTreasury, _guilds);
+                }
 
                 bot.Start();
 
@@ -86,11 +88,6 @@ namespace BombMoney
             }
 
             _client.Dispose();
-        }
-
-        public void TestPublish()
-        {            
-                        
         }
 
         private async Task _client_GuildUpdated(SocketGuild arg1, SocketGuild arg2)
