@@ -2,9 +2,12 @@
 using BombMoney.SmartContracts;
 using Discord;
 using Discord.WebSocket;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -25,6 +28,14 @@ namespace BombMoney
             EmbedBuilder embed = new EmbedBuilder();
             try
             {
+                if (message.ToLower().StartsWith("tsl "))
+                {
+                    string m = message.Remove(0, 4);
+                    embed.AddField("Translating...", Translate(new TranslateText() { Text = m }).ConfigureAwait(false).GetAwaiter().GetResult(), false);
+                    //embed.AddField("Translating...", Translate(message.Remove(0, 4)).ConfigureAwait(false).GetAwaiter().GetResult(), false);
+                    return embed.Build();
+                }
+
                 if (message.ToLower().Equals("wen peg") || message.ToLower().Equals("wen print"))
                 {
                     Random rand = new Random();
@@ -132,6 +143,58 @@ namespace BombMoney
             embed.AddField($"Fully Diluted MarketCap: ", CMCBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap.ToString("N0"), false);
             embed.AddField($"Circulating Supply: ", Treasury.GetBombCirculatingSupply().ToString("N0"), false);
             embed.AddField($"Treasury Balance: ", Treasury.GetTreasuryBalance().ToString("N0"), false);
+        }
+
+        private async Task<string> Translate(TranslateText text)
+        {
+            String result;
+
+            text.ToString();
+
+            var client = new HttpClient();
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri("https://microsoft-translator-text.p.rapidapi.com/translate?to=en&api-version=3.0&profanityAction=NoAction&textType=plain"),
+                Headers =
+                {
+                    { "X-RapidAPI-Host", "microsoft-translator-text.p.rapidapi.com" },
+                    { "X-RapidAPI-Key", "86f3388548msh2960829272ca8bcp159eb8jsn8f6c9ede909d" },
+                },
+                Content = new StringContent(text.ToString())
+                {
+                    Headers =
+                    {
+                    ContentType = new MediaTypeHeaderValue("application/json")
+                    }
+                }
+            };
+            using (var response = await client.SendAsync(request))
+            {
+                response.EnsureSuccessStatusCode();
+                result = await response.Content.ReadAsStringAsync();
+            }
+
+            return result;
+        }
+
+        internal class TranslateText
+        {
+            public string Text { get; set; }
+
+            public override string ToString()
+            {
+                StringBuilder sb = new StringBuilder();
+
+                sb.AppendLine("[");
+                sb.AppendLine("{");
+                sb.AppendLine("\"Text\": \"" + Text + "\"");
+                sb.AppendLine("}");
+                sb.AppendLine("]");
+
+
+                return sb.ToString();
+            }
         }
     }
 }

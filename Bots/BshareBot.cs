@@ -43,15 +43,18 @@ namespace BombMoney.Bots
             try
             {
                 DateTime day = DateTime.Today;
+                int addHour = 0;
+                if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                    addHour++;
                 int nextEpochHour;
                 int currentHour = DateTime.Now.TimeOfDay.Hours;
                 if (currentHour >= 18)
                 {
-                    nextEpochHour = 0;
+                    nextEpochHour = addHour;
                     day = DateTime.Today + new TimeSpan(1, 0, 0, 0);
                 }
                 else
-                    nextEpochHour = currentHour + (6 - currentHour % 6);
+                    nextEpochHour = currentHour + (6 - currentHour % 6) + addHour;
 
                 TimeSpan timeRemaining = new DateTime(day.Year, day.Month, day.Day, nextEpochHour, 0, 0).Subtract(DateTime.Now);
                 string format = @"hh\:mm\:ss";
