@@ -44,11 +44,12 @@ namespace BombMoney.Bots
             {
                 DateTime day = DateTime.Today;
                 int addHour = 0;
-                if (TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now))
+                bool isDST = TimeZoneInfo.Local.IsDaylightSavingTime(DateTime.Now);
+                if (isDST)
                     addHour++;
                 int nextEpochHour;
                 int currentHour = DateTime.Now.TimeOfDay.Hours;
-                if (currentHour >= 18)
+                if (currentHour >= 18 || (isDST && currentHour == 0))
                 {
                     nextEpochHour = addHour;
                     day = DateTime.Today + new TimeSpan(1, 0, 0, 0);
