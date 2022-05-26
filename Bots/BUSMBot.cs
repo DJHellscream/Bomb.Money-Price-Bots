@@ -1,4 +1,5 @@
-﻿using BombMoney.SmartContracts;
+﻿using BombMoney.Configurations;
+using BombMoney.SmartContracts;
 using Discord;
 using Discord.WebSocket;
 using System;
@@ -11,9 +12,9 @@ namespace BombMoney.Bots
 {
     internal class BUSMBot : BotBase
     {
-        public BUSMBot(AConfigurationClass config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
+        public BUSMBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
-
+            Logging.WriteToConsole("Loading BUSMBot...");
         }
 
         public override void Start()

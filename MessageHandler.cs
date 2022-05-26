@@ -15,12 +15,8 @@ namespace BombMoney
 {
     public class MessageHandler
     {
-        public BombMoneyTreasury Treasury { get; set; }
-        public CMCBomb CMCBomb { get; set; }
-        public MessageHandler(CMCBomb cmcBomb, BombMoneyTreasury treasury)
+        public MessageHandler()
         {
-            CMCBomb = cmcBomb;
-            Treasury = treasury;
         }
 
         public Embed ProcessMessage(string message)
@@ -94,10 +90,6 @@ namespace BombMoney
                     {
                         BuildRPCFields(embed);
                     }
-                    else if (message.ToLower().Equals("?stats") || message.ToLower().Equals("?s"))
-                    {
-                        BuildStatsFields(embed);
-                    }
 
                     if (embed.Fields.Count > 0)
                         return embed.Build();
@@ -135,14 +127,6 @@ namespace BombMoney
             embed.AddField("Chain ID:", "56", false);
             embed.AddField("Currency Symbol:", "BNB", false);
             embed.AddField("Block Explorer:", "https://bscscan.com", false);
-        }
-
-        private void BuildStatsFields(EmbedBuilder embed)
-        {
-            embed.AddField("Symbol", "BOMB", true);
-            embed.AddField($"Fully Diluted MarketCap: ", CMCBomb.Data.BombInfo.Quote.USD.FullyDilutedMarketCap.ToString("N0"), false);
-            embed.AddField($"Circulating Supply: ", Treasury.GetBombCirculatingSupply().ToString("N0"), false);
-            embed.AddField($"Treasury Balance: ", Treasury.GetTreasuryBalance().ToString("N0"), false);
         }
 
         private async Task<string> Translate(TranslateText text)

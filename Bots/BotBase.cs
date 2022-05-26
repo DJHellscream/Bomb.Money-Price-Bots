@@ -1,4 +1,4 @@
-﻿using BombMoney;
+﻿using BombMoney.Configurations;
 using BombMoney.ResponseObjects;
 using BombMoney.SmartContracts;
 using Discord;
@@ -17,34 +17,33 @@ namespace BombMoney.Bots
     public abstract class BotBase
     {
         CMCBomb _cmcBomb;
-        public AConfigurationClass Config { get; set; }
+        public TokenConfig Config { get; set; }
         public DiscordSocketClient Client { get; set; }
-        public BombMoneyOracle MoneyOracle { get; set; }
-        public BombMoneyTreasury MoneyTreasury { get; set; }
+        public SmartContract Oracle { get; set; }
+        public SmartContract Treasury { get; set; }
         public CMCBomb CMCBomb
         {
             get { return _cmcBomb; }
             set
             {
                 _cmcBomb = value;
-                MessageHandler.CMCBomb = value;
             }
         }
         public IReadOnlyCollection<SocketGuild> SocketGuilds { get; set; }
         public MessageHandler MessageHandler { get; set; }
 
-        public BotBase(AConfigurationClass config,
+        public BotBase(TokenConfig config,
             DiscordSocketClient client,
-            BombMoneyOracle moneyOracle,
-            BombMoneyTreasury moneyTreasury,
+            SmartContract Oracle,
+            SmartContract Treasury,
             IReadOnlyCollection<SocketGuild> socketGuilds)
         {
             Config = config;
             Client = client;
-            MoneyOracle = moneyOracle;
-            MoneyTreasury = moneyTreasury;
+            this.Oracle = Oracle;
+            this.Treasury = Treasury;
             SocketGuilds = socketGuilds;
-            MessageHandler = new MessageHandler(CMCBomb, MoneyTreasury);
+            MessageHandler = new MessageHandler();
         }
 
         public virtual void Start()

@@ -1,4 +1,5 @@
-﻿using BombMoney.Database;
+﻿using BombMoney.Configurations;
+using BombMoney.Database;
 using BombMoney.SmartContracts;
 using Discord;
 using Discord.WebSocket;
@@ -16,10 +17,11 @@ namespace BombMoney.Bots
         Timer EpochTimer = null;
         private static readonly string boardroomHistory = "boardroom-history";
 
-        public BshareBot(AConfigurationClass config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
+        public BshareBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
             IReadOnlyCollection<SocketGuild> socketGuilds)
             : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
+            Logging.WriteToConsole("Loading BshareBot...");
         }
 
         public override void Start()
@@ -49,10 +51,14 @@ namespace BombMoney.Bots
                     addHour++;
                 int nextEpochHour;
                 int currentHour = DateTime.Now.TimeOfDay.Hours;
-                if (currentHour >= 18 || (isDST && currentHour == 0))
+                if (currentHour >= 18 || (isDST && currentHour == 0) || (isDST && currentHour == 12))
                 {
                     nextEpochHour = addHour;
                     day = DateTime.Today + new TimeSpan(1, 0, 0, 0);
+                }
+                else if (isDST && currentHour == 12)
+                {
+                    nextEpochHour = addHour;
                 }
                 else
                     nextEpochHour = currentHour + (6 - currentHour % 6) + addHour;
@@ -78,8 +84,8 @@ namespace BombMoney.Bots
             {
                 // Waiting 5 seconds
                 await Task.Delay(5000);
-                int epoch = MoneyOracle.GetCurrentEpoch() - 1;
-                BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(epoch, MoneyTreasury.PreviousEpochBombPrice(), null);
+                int epoch = ((BombMoneyOracle)Oracle).GetCurrentEpoch() - 1;
+                BoardroomDatum newRecord = BoardroomDatum.RecordBoardRoomData(epoch, ((BombMoneyTreasury)Treasury).PreviousEpochBombPrice(), null);
 
                 if (newRecord != null)
                 {

@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace BombMoney.Bots
 {
-    internal class BTCBot : BotBase
+    internal class CZShareBot : BotBase
     {
-        public BTCBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
+        public CZShareBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
-            Logging.WriteToConsole("Loading BTCBot...");
+            Logging.WriteToConsole("Loading CZShareBot...");
         }
 
         public override void Start()

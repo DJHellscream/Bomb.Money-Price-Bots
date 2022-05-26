@@ -1,6 +1,6 @@
-﻿namespace BombMoney
+﻿namespace BombMoney.Configurations
 {
-    public class AConfigurationClass
+    public class TokenConfig
     {
         public string TokenContract { get; set; }
         public string TokenSymbol { get; set; }
@@ -17,8 +17,6 @@
         public string CMCAPIKey { get; set; }
         public string MoralisAPIKey { get; set; }
         public string CMCTokenID { get; set; }
-        public string BOMBBTCLP { get; set; }
-        public string BSHAREBNBLP { get; set; }
         public string xBOMBABI { get; set; }
         public string xBOMBCONTRACT { get; set; }
     }

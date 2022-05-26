@@ -1,4 +1,4 @@
-﻿using BombMoney;
+﻿using BombMoney.Configurations;
 using BombMoney.ResponseObjects;
 using BombMoney.SmartContracts;
 using Discord;
@@ -21,10 +21,11 @@ namespace BombMoney.Bots
         private static readonly string green = "BoardroomPrinterGreen";
         private static readonly string zen = "BoardroomPrinterZen";
 
-        public BombBot(AConfigurationClass config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
+        public BombBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
             IReadOnlyCollection<SocketGuild> socketGuilds)
             : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
+            Logging.WriteToConsole("Loading BombBot...");
         }
 
         public override void Start()
@@ -74,7 +75,7 @@ namespace BombMoney.Bots
                     {
                         IEnumerable<SocketRole> roles = guild.Roles.Where(x => x.Name == green || x.Name == red || x.Name == zen);
 
-                        // Check to see if all 3 roles exist -- if they don't delete the ones that do and readd all 3.
+                        // Check to see if all 3 roles exist -- if they don't delete the ones that do and re-add all 3.
                         if (roles.Count() != s.Count)
                         {
                             foreach (SocketRole role in roles)
@@ -126,7 +127,7 @@ namespace BombMoney.Bots
             {
                 try
                 {
-                    var twapD = await MoneyOracle.TWAPAsync();
+                    var twapD = await ((BombMoneyOracle)Oracle).TWAPAsync();
 
                     Logging.WriteToConsole($"TWAP: {twapD}");
                     await Client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, null));
@@ -148,7 +149,7 @@ namespace BombMoney.Bots
             {
                 try
                 {
-                    var consultD = await MoneyTreasury.PreviousEpochBombPriceAsync();
+                    var consultD = await ((BombMoneyTreasury)Treasury).PreviousEpochBombPriceAsync();
 
                     if (Client.ConnectionState == ConnectionState.Connected)
                     {

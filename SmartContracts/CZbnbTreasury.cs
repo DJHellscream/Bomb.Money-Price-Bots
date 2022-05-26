@@ -6,73 +6,11 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
-
 namespace BombMoney.SmartContracts
 {
-    public class BombMoneyOracle : SmartContract
+    public class CZbnbTreasury : SmartContract
     {
-        public string TokenContract { get; set; }
-
-        public BombMoneyOracle(string url, string oracleContract, string abi, string tokenContract) : base(url, oracleContract, abi)
-        {
-            TokenContract = tokenContract;
-        }
-
-        public async Task<decimal> TWAPAsync()
-        {
-            try
-            {
-                var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("twap");
-
-                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
-
-                return FormatNumberAsDecimal(result, 4, 4);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        public async Task<decimal> ConsultAsync()
-        {
-            try
-            {
-                var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("consult");
-
-                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
-
-                return FormatNumberAsDecimal(result, 4, 4);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        public int GetCurrentEpoch()
-        {
-            try
-            {
-                var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("getCurrentEpoch");
-
-                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
-
-                return (int)result;
-            }
-            catch
-            {
-                throw;
-            }
-        }
-    }
-
-    public class BombMoneyTreasury : SmartContract
-    {
-        public BombMoneyTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
+        public CZbnbTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
         {
 
         }
@@ -213,77 +151,6 @@ namespace BombMoney.SmartContracts
                 var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
 
                 return (int)result;
-            }
-            catch
-            {
-                throw;
-            }
-        }
-    }
-
-    public class xBomb : SmartContract
-    {
-        public xBomb(string url, string xBOMBContract, string abi) : base(url, xBOMBContract, abi)
-        { }
-
-        public decimal GetExchangeRate()
-        {
-            try
-            {
-                var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("getExchangeRate");
-
-                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
-
-                return FormatNumberAsDecimal(result, 1, 4);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-
-        public decimal GetTotalSupply()
-        {
-            try
-            {
-                var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("totalSupply");
-
-                var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
-
-                return FormatNumberAsDecimal(result, 6, 0);
-            }
-            catch
-            {
-                throw;
-            }
-        }
-    }
-
-    public abstract class SmartContract
-    {
-        public Web3 Client { get; set; }
-
-        public string ContractAddress { get; set; }
-
-        public string ABI { get; set; }
-
-        public SmartContract(string url, string contract, string abi)
-        {
-            Client = new Web3(url);
-            ContractAddress = contract;
-            ABI = abi;
-        }
-
-        internal static decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals)
-        {
-            try
-            {
-                string resultString = number.ToString().PadLeft(18, '0');
-                decimal resultD = decimal.Round(decimal.Parse(resultString.Insert(startIndex, ".")), decimals);
-
-                return resultD;
             }
             catch
             {

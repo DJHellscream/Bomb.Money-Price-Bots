@@ -1,4 +1,4 @@
-﻿using BombMoney;
+﻿using BombMoney.Configurations;
 using BombMoney.ResponseObjects;
 using BombMoney.SmartContracts;
 using Discord;
@@ -19,11 +19,12 @@ namespace BombMoney.Bots
     {
         xBomb xBomb = null;
 
-        public xBombBot(AConfigurationClass config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
+        public xBombBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury,
             IReadOnlyCollection<SocketGuild> socketGuilds, xBomb xBomb)
             : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
-            this.xBomb = xBomb;
+            Logging.WriteToConsole("Loading xBOMBBot...");
+            this.xBomb = xBomb;            
         }
 
         public override void Start()
