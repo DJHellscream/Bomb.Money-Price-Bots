@@ -102,6 +102,10 @@ namespace BombMoney
             {
                 treasury = new CZEmpTreasury(_tokenConfig.BscScanRPC, _tokenConfig.TreasuryContract, _tokenConfig.TreasuryABI);
             }
+            else if (config == "czbusd")
+            {
+                treasury = new CZBusdTreasury(_tokenConfig.BscScanRPC, _tokenConfig.TreasuryContract, _tokenConfig.TreasuryABI);
+            }
 
             return treasury;
         }
@@ -131,6 +135,10 @@ namespace BombMoney
             else if (config == "czemp")
             {
                 oracle = new CZEmpOracle(_tokenConfig.BscScanRPC, _tokenConfig.OracleContract, _tokenConfig.OracleABI, _tokenConfig.TokenContract);
+            }
+            else if (config == "czbusd")
+            {
+                oracle = new CZBusdOracle(_tokenConfig.BscScanRPC, _tokenConfig.OracleContract, _tokenConfig.OracleABI, _tokenConfig.TokenContract);
             }
 
             return oracle;
@@ -200,6 +208,10 @@ namespace BombMoney
             else if (s.Equals("czshare"))
             {
                 bot = new CZShareBot(_tokenConfig, _client, (BombMoneyOracle)_oracle, (BombMoneyTreasury)_treasury, _guilds);
+            }
+            else if (s.Equals("czbusd"))
+            {
+                bot = new CZBusdBot(_tokenConfig, _client, (CZBusdOracle)_oracle, (CZBusdTreasury)_treasury, _guilds);
             }
 
             return bot;

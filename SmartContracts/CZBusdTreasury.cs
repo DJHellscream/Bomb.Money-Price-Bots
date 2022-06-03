@@ -6,11 +6,12 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+
 namespace BombMoney.SmartContracts
 {
-    public class CZbnbTreasury : SmartContract
+    public class CZBusdTreasury : SmartContract
     {
-        public CZbnbTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
+        public CZBusdTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
         {
 
         }

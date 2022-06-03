@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BombMoney.SmartContracts
 {
-    public class CZBombTreasury:SmartContract
+    public class CZBombTreasury : SmartContract
     {
         public CZBombTreasury(string url, string treasuryContract, string abi) : base(url, treasuryContract, abi)
         {
@@ -21,11 +21,11 @@ namespace BombMoney.SmartContracts
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("getBombPrice");
+                var function = contract.GetFunction("getTokenPrice");
 
                 var result = await function.CallAsync<BigInteger>();
 
-                return FormatNumberAsDecimal(result, 4, 4);
+                return FormatNumberAsDecimal(result, 1, 4);
             }
             catch
             {
@@ -41,11 +41,11 @@ namespace BombMoney.SmartContracts
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("previousEpochBombPrice");
+                var function = contract.GetFunction("previousEpochTokenPrice");
 
                 var result = await function.CallAsync<BigInteger>();
 
-                return FormatNumberAsDecimal(result, 4, 4);
+                return FormatNumberAsDecimal(result, 1, 4);
             }
             catch
             {
@@ -62,11 +62,11 @@ namespace BombMoney.SmartContracts
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("previousEpochBombPrice");
+                var function = contract.GetFunction("previousEpochTokenPrice");
 
                 var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
 
-                return FormatNumberAsDecimal(result, 4, 4);
+                return FormatNumberAsDecimal(result, 1, 4);
             }
             catch
             {
@@ -113,7 +113,7 @@ namespace BombMoney.SmartContracts
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("getBombCirculatingSupply");
+                var function = contract.GetFunction("getTokenCirculatingSupply");
 
                 var result = await function.CallAsync<BigInteger>();
 
@@ -130,7 +130,7 @@ namespace BombMoney.SmartContracts
             try
             {
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
-                var function = contract.GetFunction("getBombCirculatingSupply");
+                var function = contract.GetFunction("getTokenCirculatingSupply");
 
                 var result = function.CallAsync<BigInteger>().ConfigureAwait(false).GetAwaiter().GetResult();
 

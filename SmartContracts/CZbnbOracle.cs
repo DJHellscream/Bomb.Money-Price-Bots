@@ -27,7 +27,7 @@ namespace BombMoney.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
 
-                return FormatNumberAsDecimal(result, 4, 4);
+                return FormatNumberAsDecimal(result, 1, 4);
             }
             catch
             {
@@ -44,7 +44,7 @@ namespace BombMoney.SmartContracts
 
                 var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
 
-                return FormatNumberAsDecimal(result, 4, 4);
+                return FormatNumberAsDecimal(result, 1, 4);
             }
             catch
             {

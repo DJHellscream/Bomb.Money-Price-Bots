@@ -10,15 +10,15 @@ using System.Threading.Tasks;
 
 namespace BombMoney.Bots
 {
-    public class CZEmpBot : BotBase
+    public class CZBusdBot : BotBase
     {
         private static readonly string red = "BoardroomPrinterRed";
         private static readonly string green = "BoardroomPrinterGreen";
         private static readonly string zen = "BoardroomPrinterZen";
 
-        public CZEmpBot(TokenConfig config, DiscordSocketClient client, CZEmpOracle Oracle, CZEmpTreasury Treasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, Oracle, Treasury, socketGuilds)
+        public CZBusdBot(TokenConfig config, DiscordSocketClient client, CZBusdOracle Oracle, CZBusdTreasury Treasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, Oracle, Treasury, socketGuilds)
         {
-            Logging.WriteToConsole("Loading CZEmpBot...");
+            Logging.WriteToConsole("Loading CZBusdBot...");
         }
 
         public override void Start()
@@ -125,7 +125,7 @@ namespace BombMoney.Bots
             {
                 try
                 {
-                    var twapD = await ((CZEmpOracle)Oracle).TWAPAsync();
+                    var twapD = await ((CZBusdOracle)Oracle).TWAPAsync();
 
                     Logging.WriteToConsole($"TWAP: {twapD}");
                     await Client.SetActivityAsync(new Game("TWAP: " + twapD, ActivityType.Watching, ActivityProperties.None, null));
@@ -147,7 +147,7 @@ namespace BombMoney.Bots
             {
                 try
                 {
-                    var consultD = await ((CZEmpTreasury)Treasury).PreviousEpochBombPriceAsync();
+                    var consultD = await ((CZBusdTreasury)Treasury).PreviousEpochBombPriceAsync();
 
                     if (Client.ConnectionState == ConnectionState.Connected)
                     {

@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace BombMoney.SmartContracts
 {
-    public class CZBombOracle : SmartContract
+    public class CZBusdOracle : SmartContract
     {
         public string TokenContract { get; set; }
 
-        public CZBombOracle(string url, string oracleContract, string abi, string tokenContract) : base(url, oracleContract, abi)
+        public CZBusdOracle(string url, string oracleContract, string abi, string tokenContract) : base(url, oracleContract, abi)
         {
             TokenContract = tokenContract;
         }
