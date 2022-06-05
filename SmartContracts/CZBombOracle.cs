@@ -25,9 +25,9 @@ namespace BombMoney.SmartContracts
                 var contract = Client.Eth.GetContract(ABI, ContractAddress);
                 var function = contract.GetFunction("twap");
 
-                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 1000000000000000000 });
+                var result = await function.CallAsync<BigInteger>(new object[] { TokenContract, 10000 });
 
-                return FormatNumberAsDecimal(result, 1, 4);
+                return FormatNumberAsDecimal(result, 1, 4, 5);
             }
             catch
             {

@@ -276,6 +276,28 @@ namespace BombMoney.SmartContracts
             ABI = abi;
         }
 
+        internal static decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals, int padding)
+        {
+            try
+            {
+                string resultString = number.ToString().PadLeft(padding, '0');
+                decimal resultD = decimal.Round(decimal.Parse(resultString.Insert(startIndex, ".")), decimals);
+
+                return resultD;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Assumes padding of 18 is required
+        /// </summary>
+        /// <param name="number"></param>
+        /// <param name="startIndex"></param>
+        /// <param name="decimals"></param>
+        /// <returns></returns>
         internal static decimal FormatNumberAsDecimal(BigInteger number, int startIndex, int decimals)
         {
             try
