@@ -28,6 +28,9 @@
     <None Update="config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Configurations\sbomb.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Configurations\btc.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
