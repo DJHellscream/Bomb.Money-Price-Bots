@@ -87,7 +87,8 @@ namespace BombMoney
                 || config == "btc"
                 || config == "bshare"
                 || config == "czshare"
-                || config == "sbomb")
+                || config == "sbomb"
+                || config == "phub")
             {
                 treasury = new BombMoneyTreasury(_tokenConfig.BscScanRPC, _tokenConfig.TreasuryContract, _tokenConfig.TreasuryABI);
             }
@@ -122,7 +123,8 @@ namespace BombMoney
                 || config == "btc"
                 || config == "bshare"
                 || config == "czshare"
-                || config == "sbomb")
+                || config == "sbomb"
+                || config == "phub")
             {
                 oracle = new BombMoneyOracle(_tokenConfig.BscScanRPC, _tokenConfig.OracleContract, _tokenConfig.OracleABI, _tokenConfig.TokenContract);
             }
@@ -218,6 +220,10 @@ namespace BombMoney
             else if (s.Equals("czbusd"))
             {
                 bot = new CZBusdBot(_tokenConfig, _client, (CZBusdOracle)_oracle, (CZBusdTreasury)_treasury, _guilds);
+            }
+            else if (s.Equals("phub"))
+            {
+                bot = new phubbot(_tokenConfig, _client, (BombMoneyOracle)_oracle, (BombMoneyTreasury)_treasury, _guilds);
             }
 
             return bot;

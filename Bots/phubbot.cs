@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace BombMoney.Bots
 {
-    internal class sbombBot : BotBase
+    internal class phubbot : BotBase
     {
-        public sbombBot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
+        public phubbot(TokenConfig config, DiscordSocketClient client, BombMoneyOracle moneyOracle, BombMoneyTreasury moneyTreasury, IReadOnlyCollection<SocketGuild> socketGuilds) : base(config, client, moneyOracle, moneyTreasury, socketGuilds)
         {
-            Logging.WriteToConsole("Loading sbomb Bot...");
+            Logging.WriteToConsole("Loading PHub Bot...");
         }
 
         public override void Start()
